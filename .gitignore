@@ -1,0 +1,8 @@
+# ipython savepoints
+.ipynb_checkpoints
+
+# compiled python modules
+*.pyc
+
+# backup files
+*~
