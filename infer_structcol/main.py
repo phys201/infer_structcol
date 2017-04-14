@@ -3,7 +3,7 @@ import numpy as np
 
 class Spectrum(pd.DataFrame):
     def __init__(self, reflectance_file, transmission_file=None)
-        pd.read_table or similar
+        #pd.read_table or similar
 
         if transmission_file is not None:
             raise NotImplementedError()
