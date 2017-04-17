@@ -1,7 +1,9 @@
 import multiprocessing as mp
 import numpy as np
 import pandas as pd
+import emcee
 from .main import rescale
+from .run_structcol import calc_reflectance
 
 def calc_prior(theta, phi_guess):
     vol_frac, l0, l1 = theta
@@ -45,11 +47,10 @@ def log_posterior(theta, data, sample, phi_guess):
         phi_guess: expected volume fraction of the sample
     """
     vol_frac, l0, l1 = theta
-    if not sample.wavelength == data.wavelength:
+    if not np.all(sample.wavelength == data.wavelength):
         raise ValueError("Sample and data must share the same set of wavelengths")
 
-    theory_spectrum = do_some_monte_carlo_calculation(vol_frac, sample)
-                        # returns a spectrum_object & assumes some uncertainty
+    theory_spectrum = calc_reflectance(vol_frac, sample)
 
     likelihood = calc_likelihood(data_spectrum, theory_spectrum, l0, l1)
     return np.log(likelihood) + np.log(calc_prior(theta, phi_guess))
@@ -75,7 +76,7 @@ def sample_parameters(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi
     starting_positions = [expected_vals + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
     
     # figure out how many threads to use
-    nthreads = np.min(nwalkers, mp.cpu_count())
+    nthreads = np.min([nwalkers, mp.cpu_count()])
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[data, sample, phi_guess], threads=nthreads)
     sampler.run_mcmc(starting_positions, nsteps)
