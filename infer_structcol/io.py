@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import pandas as pd
 
-from .main import Spectrum
+from .main import Spectrum, find_close_indices
 
 def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
@@ -52,12 +52,7 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
         raise IOError("Could not find normalization files. Check your path names."
 
     # find the indices of the wavelengths of interest in the data
-    wl_ind = []
-    for i, wl in enumerate(wavelen):
-        wli = np.where(abs(dark['wavelength']-wl) == np.min(abs(dark['wavelength']-wl)))[0]
-        if len(wli>1):
-            wli = wli[0]
-        wl_ind.append(int(wli))
+    wl_ind = find_close_indices(dark['wavelength'].values, wavelen)
 
     # take only the wavelengths of interest
     spec = spec.reshape((len(filelist)-2,len(dark),))
