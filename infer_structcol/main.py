@@ -4,7 +4,9 @@ import numpy as np
 class Spectrum(pd.DataFrame):
     def __init__(self, wavelength, reflectance, reflectance_sigma, transmission_data=None):
         if transmission_data is not None:
-            raise NotImplementedError()        
+            raise NotImplementedError()
+        if np.isscalar(wavelength):
+            wavelength = [wavelength]
         super(Spectrum,self).__init__({"wavelength":wavelength, "reflectance":reflectance, "sigma_r":reflectance_sigma})        
 
     
@@ -39,13 +41,14 @@ class Sample:
         self.wavelength = np.array(wavelength)
         n_wavelength = len(wavelength)
         
-        self.particle_index = extend_array(particle_index)
-        self.matrix_index = extend_array(matrix_index)
-        self.medium_index = extend_array(medium_index)
+        self.particle_index = extend_array(particle_index, n_wavelength)
+        self.matrix_index = extend_array(matrix_index, n_wavelength)
+        self.medium_index = extend_array(medium_index, n_wavelength)
         self.incident_angle = incident_angle
 
 def extend_array(val, n):
-    val = np.array(val)
+    if np.isscalar(val):
+        val = np.array([val])
     if len(val) == n:
         return val
     elif len(val) == 1:
@@ -63,8 +66,9 @@ def find_close_indices(biglist, targets):
 
     # find the indices of interest in the data that correspond to target values
     target_ind = []
-    for i, target in enumerate(targets):
-        curr_ind = np.where(abs(biglist-wl) == np.min(abs(biglist-wl)))[0][0]
+    for i, target in enumerate(np.array(targets)):
+        diffs = abs(np.array(biglist)-target)
+        curr_ind = np.where(diffs == np.min(diffs))[0][0]
         target_ind.append(curr_ind)
     return target_ind
 
