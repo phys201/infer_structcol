@@ -72,7 +72,7 @@ def sample_parameters(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi
     ndim = len(expected_vals)
     
     # set walkers in a distribution with width .05
-    starting_positions = [expected_vals + 0.05*np.random.randn(ndim)) for i in range(nwalkers)]
+    starting_positions = [expected_vals + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
     
     # figure out how many threads to use
     nthreads = np.min(nwalkers, mp.cpu_count())

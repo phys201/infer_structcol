@@ -49,7 +49,7 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
             spec = np.append([spec], [pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True).intensity])
     
     if dark is None or ref is None:
-        raise IOError("Could not find normalization files. Check your path names."
+        raise IOError("Could not find normalization files. Check your path names.")
 
     # find the indices of the wavelengths of interest in the data
     wl_ind = []
