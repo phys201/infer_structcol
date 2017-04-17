@@ -10,7 +10,7 @@ def calc_prior(theta, phi_guess):
         # Losses are not in range [0,1] for some wavelength
         return -np.inf 
 
-    if vol_frac < .35 or vol_frac < .73:
+    if vol_frac < .35 or vol_frac > .73:
         # Outside range of validity of multiple scattering model
         return -np.inf
     
@@ -27,7 +27,7 @@ def calc_likelihood(data, theory, l0, l1):
         l0: constant loss parameter (float)
         l1: effect of wavelength on losses (float)
     """
-    loss = l0 + l1*rescale(wavelength)
+    loss = l0 + l1*rescale(data.wavelength)
     residual = data.reflectance - (1-loss)*theory.reflectance
     var_eff = data.sigma_r**2 + theory.sigma_r**2
     chi_square = np.sum(residual**2/var_eff)
