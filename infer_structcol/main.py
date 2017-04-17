@@ -19,12 +19,12 @@ class Spectrum(pd.DataFrame):
         return self['sigma'].values
 
 class Sample:
-    def __init__(self, particlesize, thickness, particleindex, matrixindex, mediumindex=1, incidentangle=0):
-        self.particlesize = particlesize # can we do something clever here with units? maybe using pint?
+    def __init__(self, particle_size, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
+        self.particle_size = particle_size # can we do something clever here with units? maybe using pint?
         self.thickness = thickness # again with the units
-        self.matrixindex = matrixindex
-        self.mediumindex = mediumindex
-        self.incidentangle = incidentangle #should default be 90? pi/2?
+        self.matrix_index = matrix_index
+        self.medium_index = medium_index
+        self.incident_angle = incident_angle 
 
 def rescale(inarray):
     # Rescale values in an array to be between 0 and 1
