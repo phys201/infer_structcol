@@ -29,7 +29,7 @@ def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, se
         
     """
     # Read in system parameters from the Sample object
-    particle_radius = sc.Quantity(Sample.particle_radius, 'um')
+    particle_radius = sc.Quantity(Sample.particle_radius, 'nm')
     thickness = sc.Quantity(Sample.thickness, 'um')
     particle_index = sc.Quantity(Sample.particle_index, '')
     matrix_index = sc.Quantity(Sample.matrix_index, '')
