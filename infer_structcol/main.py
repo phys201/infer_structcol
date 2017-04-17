@@ -59,7 +59,7 @@ def rescale(inarray):
     minval = np.min(inarray)
     return (inarray-minval)/(maxval-minval)
 
-def find_close_indices(biglist, targets)
+def find_close_indices(biglist, targets):
 
     # find the indices of interest in the data that correspond to target values
     target_ind = []
