@@ -14,7 +14,7 @@ def test_run_structcol():
     from infer_structcol.main import Sample
     
     wavelength = np.array([400., 500.]) 
-    particle_radius = 0.150
+    particle_radius = 150.
     thickness = 100.
     particle_index = np.array([1.40, 1.41]) 
     matrix_index = np.array([1.0, 1.0]) 
