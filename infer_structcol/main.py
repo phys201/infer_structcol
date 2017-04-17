@@ -37,7 +37,7 @@ class Sample:
         self.particle_radius = particle_radius # can we do something clever here with units? maybe using pint?
         self.thickness = thickness # again with the units
         self.wavelength = np.array(wavelength)
-        n_wavelength = length(wavelength)
+        n_wavelength = len(wavelength)
         
         self.particle_index = extend_array(particle_index)
         self.matrix_index = extend_array(matrix_index)
