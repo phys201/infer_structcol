@@ -19,7 +19,7 @@ class Spectrum(pd.DataFrame):
     def sigma_r(self):
         return self['sigma_r'].values
     @property
-    def transmission(self):
+    def transmition(self):
         raise NotImplementedError()
         return self['transmission'].values
     @property
@@ -33,8 +33,8 @@ class Spectrum(pd.DataFrame):
         np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
 
 class Sample:
-    def __init__(self, wavelength, particle_size, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
-        self.particle_size = particle_size # can we do something clever here with units? maybe using pint?
+    def __init__(self, wavelength, particle_radius, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
+        self.particle_radius = particle_radius # can we do something clever here with units? maybe using pint?
         self.thickness = thickness # again with the units
         self.wavelength = np.array(wavelength)
         n_wavelength = length(wavelength)
