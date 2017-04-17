@@ -38,9 +38,12 @@ class Sample:
     def __init__(self, wavelength, particle_radius, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
         self.particle_radius = particle_radius # can we do something clever here with units? maybe using pint?
         self.thickness = thickness # again with the units
+
+        if np.isscalar(wavelength):
+            wavelength = [wavelength]
         self.wavelength = np.array(wavelength)
         n_wavelength = len(wavelength)
-        
+
         self.particle_index = extend_array(particle_index, n_wavelength)
         self.matrix_index = extend_array(matrix_index, n_wavelength)
         self.medium_index = extend_array(medium_index, n_wavelength)
@@ -60,6 +63,8 @@ def rescale(inarray):
     # Rescale values in an array to be between 0 and 1
     maxval = np.max(inarray)
     minval = np.min(inarray)
+    if maxval == minval:
+        return 0
     return (inarray-minval)/(maxval-minval)
 
 def find_close_indices(biglist, targets):
