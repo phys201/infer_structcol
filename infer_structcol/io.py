@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 14 11:31:39 2017
-
-@author: stephenson
-"""
 import os
 import numpy as np
 import glob
-import matplotlib.pyplot as plt
 import pandas as pd
+
+from .main import Spectrum
 
 def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
@@ -39,17 +34,23 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     filelist = glob.glob(os.path.join(directory,'*.txt'))
     spec = np.array([])
     
+    dark = None
+    ref = None
+
     # iterate through files in directory, finding reference, dark, and spectra
     for filename in filelist:
         if filename == os.path.join(directory,dark_file):
             dark = pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True)
             dark = dark.apply(pd.to_numeric)
-        if filename == os.path.join(directory,ref_file):
+        elif filename == os.path.join(directory,ref_file):
             ref = pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True)
             ref = ref.apply(pd.to_numeric)
-        if filename != os.path.join(directory,ref_file) and filename != os.path.join(directory,dark_file):
+        else:
             spec = np.append([spec], [pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True).intensity])
     
+    if dark is None or ref is None:
+        raise IOError("Could not find normalization files. Check your path names."
+
     # find the indices of the wavelengths of interest in the data
     wl_ind = []
     for i, wl in enumerate(wavelen):
@@ -64,7 +65,7 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     dark = dark.iloc[wl_ind]
     ref = ref.iloc[wl_ind]
         
-    return dark, ref, spec
+    return ref, dark, spec
 
 def calc_norm_spec(ref, dark, spec):
     '''
@@ -90,7 +91,7 @@ def calc_norm_spec(ref, dark, spec):
     return (spec-dark['intensity'])/(ref['intensity']-dark['intensity'])
     
 
-def write_data_file(wavelen, ref, dark, spec, single_spec, directory = ''):
+def convert_data(wavelen, ref_file, dark_file, directory = ''):
     '''
     write loaded experimental data to file in columns wavelength, 
     normalized intensity, and standard deviation, respectively
@@ -109,9 +110,22 @@ def write_data_file(wavelen, ref, dark, spec, single_spec, directory = ''):
     single_spec: array-like
         array of intensity data for singe data set of interest
     '''
+
+    ref, dark, spec = load_exp_data(wavelen, ref_file, dark_file, directory = '')
     norm_spec = np.zeros(spec.shape)
     for i in range(spec.shape[0]):
         norm_spec[i,:] = calc_norm_spec(ref, dark, spec[i,:])
-    norm_spec_single = calc_norm_spec(ref, dark, single_spec)
     stdev = np.std(norm_spec, axis = 0, ddof = 1)
-    np.savetxt(os.path.join(directory,'data_file.txt'), np.c_[wavelen, norm_spec_single, stdev])
+
+    directory = os.path.join(directory, 'converted')
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
+    for i in range(spec.shape[0]):
+        np.savetxt(os.path.join(directory,str(i)+'_data_file.txt'), np.c_[wavelen, norm_spec[i,:], stdev])
+    
+def load_spectrum(filepath):
+    '''
+    Loads a spectrum from a converted data file or saved spectrum
+    '''
+    filedata = np.loadtxt(filepath)
+    return Spectrum(filedata[:,0], filedata[:,1], filedata[:,2])
