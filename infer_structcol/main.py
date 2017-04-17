@@ -19,7 +19,7 @@ class Spectrum(pd.DataFrame):
     def sigma_r(self):
         return self['sigma_r'].values
     @property
-    def transmition(self):
+    def transmittance(self):
         raise NotImplementedError()
         return self['transmission'].values
     @property
