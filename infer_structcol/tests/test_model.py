@@ -27,5 +27,5 @@ def test_log_posterior():
     theta = (0.5, 0, 0)
     sample = Sample(500, 200, 200, 1.5, 1)
     post = log_posterior(theta, spectrum, sample, 0.5, seed=2)
-    assert_approx_equal(post, -1.219450433033298)
+    assert_approx_equal(post, 1.3478047169617922)
     
