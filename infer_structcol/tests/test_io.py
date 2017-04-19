@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import infer_structcol
 from infer_structcol.io import convert_data,load_spectrum
@@ -20,3 +21,8 @@ def test_io():
     assert_almost_equal(spectrum.sigma_r[0],1.798784539608779334e-02)
     
     spectrum.save(convert_direc)
+
+    try:
+        shutil.rmtree(os.path.join(direc, 'converted'))
+    except:
+        pass
