@@ -33,7 +33,6 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
     filelist = glob.glob(os.path.join(directory,'*.txt'))
     spec = np.array([])
-    
     dark = None
     ref = None
 
@@ -106,7 +105,7 @@ def convert_data(wavelen, ref_file, dark_file, directory = ''):
         array of intensity data for singe data set of interest
     '''
 
-    ref, dark, spec = load_exp_data(wavelen, ref_file, dark_file, directory = '')
+    ref, dark, spec = load_exp_data(wavelen, ref_file, dark_file, directory)
     norm_spec = np.zeros(spec.shape)
     for i in range(spec.shape[0]):
         norm_spec[i,:] = calc_norm_spec(ref, dark, spec[i,:])
