@@ -1,3 +1,7 @@
+'''
+This file contains the generative model and inference framework to calculate posterior probabilities.
+'''
+
 import multiprocessing as mp
 import numpy as np
 import pandas as pd

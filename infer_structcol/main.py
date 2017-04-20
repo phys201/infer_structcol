@@ -1,3 +1,7 @@
+'''
+This file contains classes used to handle data and a few simple functions for manipulating numpy arrays. 
+'''
+
 import pandas as pd
 import numpy as np 
 

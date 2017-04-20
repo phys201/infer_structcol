@@ -1,11 +1,15 @@
+'''
+This file interfaces with the structcol package to simulate spectra.
+'''
+
 import numpy as np
 import warnings
-from infer_structcol import main 
 import structcol as sc
 from structcol import montecarlo as mc
 import structcol.refractive_index as ri
 
-warnings.simplefilter('ignore', RuntimeWarning)
+from infer_structcol import main 
+
 def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, seed=None):
     """
     Calculates a reflection spectrum using the structcol package.

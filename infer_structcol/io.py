@@ -1,3 +1,7 @@
+'''
+This file conotains functions for loading data and converting it into a usable format
+'''
+
 import os
 import numpy as np
 import glob
