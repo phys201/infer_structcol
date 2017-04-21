@@ -1,13 +1,57 @@
 '''
-This file contains the generative model and inference framework to calculate posterior probabilities.
+This file contains the generative model to calculate posterior probabilities.
 '''
 
 import multiprocessing as mp
 import numpy as np
 import pandas as pd
 import emcee
-from .main import rescale
+from .main import Spectrum, rescale, check_wavelength
 from .run_structcol import calc_reflectance
+
+# define limits of validity for the MC scattering model
+min_phi = 0.35
+max_phi = 0.73
+
+def calc_model_spect(sample, theta, seed=None):
+    ''''
+    Calculates a corrected theoretical spectrom from a set of parameters.
+    
+    Parameters
+    -------
+    sample: Sample object
+        information about the sample that produced data_spectrum
+    theta: 3-tuple 
+        set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
+    seed: int (optional)
+        if specified, passes the seed through to the MC multiple scatterin calculation
+    '''
+
+    phi, l0, l1 = theta
+    loss = l0 + l1*rescale(sample.wavelength)
+    theory_spectrum = calc_reflectance(phi, sample, seed=seed)
+    theory_spectrum['reflectance'] *= (1-loss)
+    theory_spectrum['sigma_r'] *= (1-loss)
+    return theory_spectrum
+
+def calc_resid_spect(spect1, spect2):
+    '''
+    Calculates the difference between two spectra and convolves their uncertainty.
+    
+    Parameters
+    -------
+    spect1: Spectrum object
+        one of two spectra to be compared
+    spect2: Spectrum object
+        second of two spectra to be compared
+
+    Returns
+    -------
+    Spectrum object: contains residuals and uncertainties at each wavelength
+    '''
+    residual = spect1.reflectance - spect2.reflectance
+    sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
+    return Spectrum(check_wavelength(spect1, spect2), residual, sigma_eff)
 
 def calc_log_prior(theta, phi_guess):
     '''
@@ -26,33 +70,27 @@ def calc_log_prior(theta, phi_guess):
         # Losses are not in range [0,1] for some wavelength
         return -np.inf 
 
-    if vol_frac < .35 or vol_frac > .73:
+    if not min_phi < vol_frac < max_phi:
         # Outside range of validity of multiple scattering model
         return -np.inf
     
     var = .0025 # based on expected normal range
     return -(vol_frac-phi_guess)**2/var
 
-def calc_likelihood(data, theory, l0, l1):
+def calc_likelihood(spect1, spect2):
     '''
     Returns likelihood of obtaining an experimental dataset from a given theoretical spectrum
-    
+
     Parameters
     -------
-    data: Spectrum object
+    spect1: Spectrum object
         experimental dataset
-    theory: Spectrum object
+    spect2: Spectrum object
         calculated dataset
-    l0: float
-        baseline loss parameter
-    l1: float
-        wavelength-dependent loss parameter
     '''
-    loss = l0 + l1*rescale(data.wavelength)
-    residual = data.reflectance - (1-loss)*theory.reflectance
-    var_eff = data.sigma_r**2 + ((1-loss)*theory.sigma_r)**2
-    chi_square = np.sum(residual**2/var_eff)
-    prefactor = 1/np.prod(np.sqrt(2*np.pi*var_eff))
+    resid_spect = calc_resid_spect(spect1, spect2)
+    chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
+    prefactor = 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
     return prefactor * np.exp(-chi_square/2)
 
 def log_posterior(theta, data_spectrum, sample, phi_guess, seed=None):
@@ -68,70 +106,16 @@ def log_posterior(theta, data_spectrum, sample, phi_guess, seed=None):
     sample: Sample object
         information about the sample that produced data_spectrum
     phi_guess: float
-        user's best guess of the expected voluem fraction
+        user's best guess of the expected volume fraction
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scatterin calculation
     '''    
-    vol_frac, l0, l1 = theta
-    if not np.all(sample.wavelength == data_spectrum.wavelength):
-        raise ValueError("Sample and data must share the same set of wavelengths")
-    theory_spectrum = calc_reflectance(vol_frac, sample, seed=seed)
+    check_wavelength(data_spectrum, sample) # not used for anything, but we need to run the check.
+    log_prior = calc_log_prior(theta, phi_guess)
+    if log_prior == -np.inf:
+        # don't bother running MC
+        return log_prior
 
-    likelihood = calc_likelihood(data_spectrum, theory_spectrum, l0, l1)
-    return np.log(likelihood) + calc_log_prior(theta, phi_guess)
-
-def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi_guess = 0.55):
-    '''
-    Calls run_mcmc and outputs pandas DataFrame of parameters and log-probability
-    
-    Parameters
-    -------
-    data: Spectrum object
-        experimental dataset
-    sample: Sample object
-        information about the sample that produced data_spectrum
-    nwalkers: int (even)
-        number of parallelized MCMC walkers to use
-    nsteps: int
-        number of steps taken by each walker
-    burn_in_time: int
-        number of inital steps to be removed from the returned samples
-    phi_guess: float
-        user's best guess of the expected voluem fraction
-    '''    
-
-    walkers = run_mcmc(data, sample, nwalkers, nsteps, phi_guess)
-    traces = np.concatenate([sampler.chain[:,burn_in_time:,:], sampler.lnprobability[:,burn_in_time:,np.newaxis]],axis=2).reshape(-1, ndim+1).T
-    return pd.DataFrame({key: traces[val] for val, key in enumerate(['vol_frac','l0','l1','lnprob'])})
-
-def run_mcmc(data, sample, nwalkers, nsteps, phi_guess):
-    '''
-    Performs actual mcmc calculation. Returns an Emcee Sampler object. 
-
-    Parameters
-    -------
-    data: Spectrum object
-        experimental dataset
-    sample: Sample object
-        information about the sample that produced data_spectrum
-    nwalkers: int (even)
-        number of parallelized MCMC walkers to use
-    nsteps: int
-        number of steps taken by each walker
-    phi_guess: float
-        user's best guess of the expected voluem fraction
-    '''    
-    # set expected values to initialize walkers
-    expected_vals = np.array([phi_guess,.5,0])
-    ndim = len(expected_vals)
-    
-    # set walkers in a distribution with width .05
-    starting_positions = [expected_vals + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
-    
-    # figure out how many threads to use
-    nthreads = np.min([nwalkers, mp.cpu_count()])
-
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[data, sample, phi_guess], threads=nthreads)
-    sampler.run_mcmc(starting_positions, nsteps)
-    return sampler
-
+    theory_spectrum = calc_model_spect(sample, theta, seed)
+    likelihood = calc_likelihood(data_spectrum, theory_spectrum)
+    return np.log(likelihood) + log_prior

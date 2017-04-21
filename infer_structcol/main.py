@@ -136,3 +136,10 @@ def find_close_indices(biglist, targets):
         target_ind.append(curr_ind)
     return target_ind
 
+def check_wavelength(obj1, obj2):
+    '''
+    Make sure Spectrum or Sample objects have the same 'wavelength' attributes.
+    '''
+    if np.all(obj1.wavelength == obj2.wavelength):
+        return obj1.wavelength
+    raise ValueError("Wavelength mismatch.")
