@@ -1,6 +1,6 @@
-from infer_structcol.main import Spectrum, Sample, extend_array, rescale, find_close_indices
+from infer_structcol.main import Spectrum, Sample, extend_array, rescale, find_close_indices, check_wavelength
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_raises
 
 def test_Spectrum():
     spect = Spectrum([300,500],[0.5,0.5],[0.1,0.1])
@@ -26,3 +26,9 @@ def test_find_close_indices():
     targets = [np.pi, np.sqrt(50), 10.5]
     expected_output = np.array([2,6,9])
     assert_equal(find_close_indices(big, targets), expected_output)
+
+def test_check_wavelength():
+    spect = Spectrum([300,500],[0.5,0.5],[0.1,0.1])
+    samp = Sample([300,500],0.5, 100, 1.5, 1.3)
+    assert_equal(check_wavelength(spect, samp), samp.wavelength)
+    

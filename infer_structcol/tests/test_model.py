@@ -1,7 +1,19 @@
-from infer_structcol.model import calc_log_prior, calc_likelihood, log_posterior 
+from infer_structcol.model import *
 from infer_structcol.main import Spectrum, Sample
 import numpy as np
 from numpy.testing import assert_equal, assert_approx_equal
+from pandas.util.testing import assert_frame_equal
+
+def test_calc_model_spect():
+    sample = Sample(500, 200, 200, 1.5, 1)
+    theta = (0.5, 0, 0)
+    assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, 0.507608289932, 0.0261746352879))
+
+def test_calc_resid_spect():
+    spect1=Spectrum(500, 0.5, 0.1)
+    spect2=Spectrum(500, 0.7, 0)
+    expected_output = Spectrum(500, 0.2, 0.1)
+    assert_frame_equal(calc_resid_spect(spect2, spect1), expected_output)
 
 def test_prior():
     pars = (0.5, 0, 1)
@@ -17,10 +29,7 @@ def test_likelihood():
     spect1=Spectrum(500, 0.5, 0.1)
     spect2=Spectrum(500, 0.7, 0)
     expected_output1 = 1/np.sqrt(2*np.pi*0.01)*np.exp(-2)
-    assert_approx_equal(calc_likelihood(spect1, spect2, 0, 0), expected_output1)
-
-    expected_output2 = 1/np.sqrt(2*np.pi*(0.01))
-    assert_approx_equal(calc_likelihood(spect1, spect2, 2/7, 0), expected_output2)
+    assert_approx_equal(calc_likelihood(spect1, spect2), expected_output1)
 
 def test_log_posterior():
     spectrum = Spectrum(500, 0.5, 0.1)
