@@ -3,6 +3,7 @@ This file interfaces with the structcol package to simulate spectra.
 '''
 
 import numpy as np
+import warnings
 import structcol as sc
 from structcol import montecarlo as mc
 import structcol.refractive_index as ri
@@ -43,42 +44,46 @@ def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, se
     wavelength = sc.Quantity(Sample.wavelength, 'nm')
     
     # Calculate the effective index of the sample
-    sample_index = ri.n_eff(particle_index, matrix_index, volume_fraction)        
+    sample_index = ri.n_eff(particle_index, matrix_index, volume_fraction)      
+
+    # Define scattering angles (a non-zero minimum angle is needed) 
+    min_angle = 0.01            
+    angles = sc.Quantity(np.linspace(min_angle,np.pi, 200), 'rad')   
     
     reflection = []
     for i in np.arange(len(wavelength)):    
-        # Calculate the phase function and scattering and absorption lengths 
-        # from the single scattering model
-        p, mu_scat, mu_abs = mc.calc_scat(particle_radius, particle_index[i], 
-                                          sample_index[i], volume_fraction, 
-                                            wavelength[i], phase_mie=False, 
-                                                mu_scat_mie=False)
-            
+        # Calculate the phase function and scattering and absorption lengths from the single scattering model
+        p, lscat, labs = mc.calc_scat(particle_radius, particle_index[i], sample_index[i], volume_fraction, angles, wavelength[i], phase_mie=False, lscat_mie=False)
+        
+        mua = 1 / labs                               
+        mus = 1 / lscat             
+
         # Initialize the trajectories
-        r0, k0, W0 = mc.initialize(nevents, ntrajectories, seed=seed, 
-                                   incidence_angle=incident_angle)
+        r0, k0, W0 = mc.initialize(nevents, ntrajectories, seed=seed, incidence_angle=incident_angle)
         r0 = sc.Quantity(r0, 'um')
         k0 = sc.Quantity(k0, '')
         W0 = sc.Quantity(W0, '')
 
         # Generate a matrix of all the randomly sampled angles first 
-        sintheta, costheta, sinphi, cosphi, _, _ = mc.sample_angles(nevents, ntrajectories, p)
+        sintheta, costheta, sinphi, cosphi, theta, phi = mc.sample_angles(nevents, ntrajectories, p, angles)
 
         # Create step size distribution
-        step = mc.sample_step(nevents, ntrajectories, mu_abs, mu_scat)
+        step = mc.sample_step(nevents, ntrajectories, mua, mus)
     
         # Create trajectories object
         trajectories = mc.Trajectory(r0, k0, W0, nevents)
 
         # Run photons
-        trajectories.absorb(mu_abs, step)                         
+        trajectories.absorb(mua, step)                         
         trajectories.scatter(sintheta, costheta, sinphi, cosphi)         
         trajectories.move(step)
 
+        #W = trajectories.weight    # we currently don't run systems with absorbers 
+        k = trajectories.direction
+        r = trajectories.position
+
         # Calculate the reflection fraction 
-        R_fraction = mc.calc_reflection(trajectories, sc.Quantity('0.0 um'), 
-                                        thickness, ntrajectories, matrix_index[i], 
-                                        sample_index[i], detection_angle=np.pi/2)
+        R_fraction = mc.calc_reflection(r[2], sc.Quantity('0.0 um'), thickness, ntrajectories, matrix_index[i], sample_index[i], k[0], k[1], k[2], detection_angle=np.pi/2)
         reflection.append(R_fraction)
         
     # Uncertainties are 1 standard deviation of 100 typical runs

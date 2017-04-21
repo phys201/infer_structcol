@@ -1,0 +1,11 @@
+setup.py
+infer_structcol/__init__.py
+infer_structcol/io.py
+infer_structcol/main.py
+infer_structcol/model.py
+infer_structcol/run_structcol.py
+infer_structcol.egg-info/PKG-INFO
+infer_structcol.egg-info/SOURCES.txt
+infer_structcol.egg-info/dependency_links.txt
+infer_structcol.egg-info/not-zip-safe
+infer_structcol.egg-info/top_level.txt
