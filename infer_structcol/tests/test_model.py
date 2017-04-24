@@ -18,12 +18,12 @@ def test_calc_resid_spect():
 def test_prior():
     pars = (0.5, 0, 1)
     phi_guess = 0.5
-    assert_approx_equal(calc_log_prior((0.5, 0, 1), 0.5), 0)
-    assert_approx_equal(calc_log_prior((0.5, 1,-1), 0.5), 0)
-    assert_equal(calc_log_prior((0.5,-0.5,1),0.5), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0,1.5),0.5), -np.inf)
-    assert_equal(calc_log_prior((1.0, 1, 1), 0.5), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0, 1), 0.6), calc_log_prior((0.6, 0, 1), 0.5))
+    assert_approx_equal(calc_log_prior((0.5, 0, 1)), 0)
+    assert_approx_equal(calc_log_prior((0.5, 1,-1)), 0)
+    assert_equal(calc_log_prior((0.5,-0.5,1)), -np.inf)
+    assert_equal(calc_log_prior((0.5, 0,1.5)), -np.inf)
+    assert_equal(calc_log_prior((1.0, 1, 1)), -np.inf)
+    assert_equal(calc_log_prior((0.5, 0, 1)), calc_log_prior((0.6, 0, 1)))
 
 def test_likelihood():
     spect1=Spectrum(500, 0.5, 0.1)
@@ -35,6 +35,6 @@ def test_log_posterior():
     spectrum = Spectrum(500, 0.5, 0.1)
     theta = (0.5, 0, 0)
     sample = Sample(500, 200, 200, 1.5, 1)
-    post = log_posterior(theta, spectrum, sample, 0.5, seed=2)
+    post = log_posterior(theta, spectrum, sample, seed=2)
     assert_approx_equal(post, 1.3478047169617922)
     
