@@ -11,7 +11,7 @@ import lmfit
 from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, log_posterior
 from .run_structcol import calc_reflectance
 
-def find_max_like(data, sample, phi_guess=0.55, seed=None):
+def find_max_like(data, sample, seed=None):
     '''
     Uses lmfit to approximate the highest likelihood parameter values.
     We use likelihood instead of posterior because lmfit requires an array of residuals.
@@ -41,7 +41,7 @@ def find_max_like(data, sample, phi_guess=0.55, seed=None):
     fit_params = lmfit.Parameters()
     fit_params['l0'] = lmfit.Parameter(value=0, min=0, max=1)
     fit_params['l1'] = lmfit.Parameter(value=0, min=-1, max=1)
-    fit_params['phi'] = lmfit.Parameter(value=phi_guess, min=min_phi, max=max_phi)
+    fit_params['phi'] = lmfit.Parameter(value=.55, min=min_phi, max=max_phi)
     fit_params = lmfit.minimize(resid, fit_params).params
     return (fit_params['phi'].value, fit_params['l0'].value, fit_params['l1'].value)
 
@@ -92,7 +92,7 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
 
     # set expected values to initialize walkers
     if theta is None:
-        theta = find_max_like(data, sample, phi_guess, seed)
+        theta = find_max_like(data, sample, seed)
 
     ndim = len(theta)
 
