@@ -53,7 +53,7 @@ def calc_resid_spect(spect1, spect2):
     sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
     return Spectrum(check_wavelength(spect1, spect2), residual, sigma_eff)
 
-def calc_log_prior(theta, phi_guess):
+def calc_log_prior(theta):
     '''
     Calculats log of prior probability of obtaining theta.
     
@@ -61,8 +61,6 @@ def calc_log_prior(theta, phi_guess):
     -------
     theta: 3-tuple 
         set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
-    phi_guess: float
-        user's best guess of the expected voluem fraction
     '''
     vol_frac, l0, l1 = theta
 
@@ -73,9 +71,8 @@ def calc_log_prior(theta, phi_guess):
     if not min_phi < vol_frac < max_phi:
         # Outside range of validity of multiple scattering model
         return -np.inf
-    
-    var = .0025 # based on expected normal range
-    return -(vol_frac-phi_guess)**2/var
+
+    return 0
 
 def calc_likelihood(spect1, spect2):
     '''
@@ -93,7 +90,7 @@ def calc_likelihood(spect1, spect2):
     prefactor = 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
     return prefactor * np.exp(-chi_square/2)
 
-def log_posterior(theta, data_spectrum, sample, phi_guess, seed=None):
+def log_posterior(theta, data_spectrum, sample, seed=None):
     '''
     Calculates log-posterior of a set of parameters producing an observed reflectance spectrum
     
@@ -105,13 +102,11 @@ def log_posterior(theta, data_spectrum, sample, phi_guess, seed=None):
         experimental dataset
     sample: Sample object
         information about the sample that produced data_spectrum
-    phi_guess: float
-        user's best guess of the expected volume fraction
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scatterin calculation
     '''    
     check_wavelength(data_spectrum, sample) # not used for anything, but we need to run the check.
-    log_prior = calc_log_prior(theta, phi_guess)
+    log_prior = calc_log_prior(theta)
     if log_prior == -np.inf:
         # don't bother running MC
         return log_prior

@@ -8,6 +8,6 @@ setup(name='infer_structcol',
       author_email='vhwang@g.harvard.edu',
       license='GNU GPL v3',
       packages=['infer_structcol'],
-      requires=['structcol','numpy', 'scipy','emcee','matplotlib', 'pint'],
+      requires=['structcol','numpy', 'scipy','emcee','matplotlib', 'pint', 'lmfit'],
       zip_safe=False)
 
