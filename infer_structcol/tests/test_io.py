@@ -9,7 +9,7 @@ def test_io():
     # convert the spectrum
     filepath = os.path.dirname(os.path.abspath(__file__))
     direc = os.path.join(filepath, 'test_data')
-    convert_data(np.array([450,600,800]), 'ref.txt', 'dark.txt', directory = direc) 
+    convert_data(np.array([450,600,800]), 'ref.txt', 'dark.txt', directory = os.path.join(direc, 'reflection'))
     
     # load the spectrum, creating a spectrum object
     convert_direc = os.path.join(direc,'converted','0_data_file.txt')
