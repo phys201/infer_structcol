@@ -109,7 +109,7 @@ def log_posterior(theta, data_spectrum, sample, seed=None):
     log_prior = calc_log_prior(theta)
     if log_prior == -np.inf:
         # don't bother running MC
-        return log_prior
+        return -1e100
 
     theory_spectrum = calc_model_spect(sample, theta, seed)
     likelihood = calc_likelihood(data_spectrum, theory_spectrum)
