@@ -13,6 +13,8 @@ from .run_structcol import calc_reflectance
 min_phi = 0.35
 max_phi = 0.73
 
+minus_inf = -1e100 # required since emcee throws errors if we actually pass in -inf
+
 def calc_model_spect(sample, theta, seed=None):
     ''''
     Calculates a corrected theoretical spectrom from a set of parameters.
@@ -109,7 +111,7 @@ def log_posterior(theta, data_spectrum, sample, seed=None):
     log_prior = calc_log_prior(theta)
     if log_prior == -np.inf:
         # don't bother running MC
-        return -1e100
+        return minus_inf
 
     theory_spectrum = calc_model_spect(sample, theta, seed)
     likelihood = calc_likelihood(data_spectrum, theory_spectrum)
