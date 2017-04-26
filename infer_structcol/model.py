@@ -53,7 +53,7 @@ def calc_resid_spect(spect1, spect2):
     '''
     residual = spect1.reflectance - spect2.reflectance
     sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
-    return Spectrum(check_wavelength(spect1, spect2), residual, sigma_eff)
+    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
 
 def calc_log_prior(theta):
     '''
