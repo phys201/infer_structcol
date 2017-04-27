@@ -56,7 +56,12 @@ class Spectrum(pd.DataFrame):
     def save(self, filepath):
         if not filepath[-4:] =='.txt':
             filepath = filepath + '.txt.'
-        np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, self.transmittance, self.sigma_t])
+        if 'reflectance' in self.keys() and 'transmittance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, self.transmittance, self.sigma_t])
+        elif 'reflectance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
+        else:
+            np.savetxt(filepath, np.c_[self.wavelength, self.transmittance, self.sigma_t])
 
 class Sample:
     '''
