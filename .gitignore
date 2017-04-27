@@ -9,3 +9,7 @@
 
 # converted test data files
 infer_structcol/tests/test_data/converted*
+
+# Distribution / packaging
+build/
+*.egg*
