@@ -6,7 +6,6 @@ import numpy as np
 import structcol as sc
 from structcol import montecarlo as mc
 import structcol.refractive_index as ri
-
 from infer_structcol import main 
 
 def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, seed=None):
