@@ -17,8 +17,8 @@ def test_io():
     
     # check if equal to previously converted data
     assert_almost_equal(spectrum.wavelength[0],450)
-    assert_almost_equal(spectrum.reflectance[0],0.41846705358309988)
-    assert_almost_equal(spectrum.sigma_r[0],0.021908005804960589)
+    assert_almost_equal(spectrum.reflectance[0],0.41925014900339536)
+    assert_almost_equal(spectrum.sigma_r[0],0.023752130163257147)
     
     spectrum.save(convert_direc)
 

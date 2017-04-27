@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: infer-structcol
+Version: 0.0.1
+Summary: Inference of parameters of structural color samples
+Home-page: http://github.com/p201-sp2016/infer_structcol
+Author: Mandrill Rumps
+Author-email: vhwang@g.harvard.edu
+License: GNU GPL v3
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires: structcol
+Requires: numpy
+Requires: scipy
+Requires: emcee
+Requires: matplotlib
+Requires: pint
