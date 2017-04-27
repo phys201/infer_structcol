@@ -1,5 +1,5 @@
 '''
-This file conotains functions for loading data and converting it into a usable 
+This file contains functions for loading data and converting it into a usable 
 format
 '''
 
@@ -131,6 +131,9 @@ def load_spectrum(**kwargs):
     if 'refl_filepath' in kwargs and 'trans_filepath' in kwargs:
         trans_filedata = np.loadtxt(kwargs['trans_filepath'])
         refl_filedata = np.loadtxt(kwargs['refl_filepath'])
+        if np.all(refl_filedata[:,0] != trans_filedata[:,0]):
+            raise ValueError("""Wavelengths of transmittance and reflectance 
+            spectra do not match""")
         return Spectrum(refl_filedata[:,0], 
                         relfectance = refl_filedata[:,1], 
                         sigma_r = refl_filedata[:,2], 
@@ -141,11 +144,14 @@ def load_spectrum(**kwargs):
         return Spectrum(refl_filedata[:,0], 
                         reflectance = refl_filedata[:,1], 
                         sigma_r = refl_filedata[:,2])
-    else:
+    elif 'trans_filepath' in kwargs:
         trans_filedata = np.loadtxt(kwargs['trans_filepath'])
         return Spectrum(trans_filedata[:,0],
                         transmittance = trans_filedata[:,1],
                         sigma_t = trans_filedata[:,2])
+    else:
+        raise ValueError("""You must enter one or both keyword arguments 
+        refl_filepath or trans_filepath""")
     
     
     
