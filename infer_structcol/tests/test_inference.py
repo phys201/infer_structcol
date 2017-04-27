@@ -12,7 +12,7 @@ def test_calc_max_like():
     assert_equal(max_like_vals, (0.55000000014887396,0.0,0.0))
 
 def test_run_mcmc():
-    spectrum = Spectrum(500, 0.5, 0.1)
+    spectrum = Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     sample = Sample(500, 200, 200, 1.5, 1)
     theta = (0.5, 0, 0)
     run_mcmc(spectrum, sample, nwalkers=6, nsteps=1, theta=theta, seed=2)

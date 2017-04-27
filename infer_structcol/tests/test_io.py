@@ -9,11 +9,11 @@ def test_io():
     # convert the spectrum
     filepath = os.path.dirname(os.path.abspath(__file__))
     direc = os.path.join(filepath, 'test_data')
-    convert_data(np.array([450,600,800]), 'ref.txt', 'dark.txt', directory = direc) 
+    convert_data(np.array([450,600,800]), 'ref.txt', 'dark.txt', directory = os.path.join(direc, 'reflection'))
     
     # load the spectrum, creating a spectrum object
-    convert_direc = os.path.join(direc,'converted','0_data_file.txt')
-    spectrum = load_spectrum(convert_direc)
+    convert_direc = os.path.join(direc,'reflection','converted','0_data_file.txt')
+    spectrum = load_spectrum(refl_filepath = convert_direc)
     
     # check if equal to previously converted data
     assert_almost_equal(spectrum.wavelength[0],450)
@@ -23,6 +23,6 @@ def test_io():
     spectrum.save(convert_direc)
 
     try:
-        shutil.rmtree(os.path.join(direc, 'converted'))
+        shutil.rmtree(os.path.join(direc, 'reflection', 'converted'))
     except:
         pass

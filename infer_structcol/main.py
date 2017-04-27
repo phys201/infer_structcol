@@ -17,15 +17,24 @@ class Spectrum(pd.DataFrame):
         reflectance values at each wavelength
     reflectance_sigma: array of length N
         uncertainty on each reflection value
-    transmission_data: NOT IMPLEMENTED
-        will contain similar information to reflection
+    transmittance: array of length N
+        reflectance values at each wavelength
+    tranmittance_sigma: array of length N
+        uncertainty on each reflection value
     '''
 
-    def __init__(self, wavelength, reflectance, reflectance_sigma, transmission_data=None):
-        if transmission_data is not None:
-            raise NotImplementedError()
-        super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), "reflectance":convert_dtype(reflectance), "sigma_r":convert_dtype(reflectance_sigma)})        
-
+    def __init__(self, wavelength, **kwargs):
+        if 'reflectance' in kwargs and 'transmittance' in kwargs:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r']),
+            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])})
+        elif 'reflectance' in kwargs:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r'])})       
+        else:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])}) 
+            
     
 
     @property
@@ -39,17 +48,20 @@ class Spectrum(pd.DataFrame):
         return self['sigma_r'].values
     @property
     def transmittance(self):
-        raise NotImplementedError()
-        return self['transmission'].values
+        return self['transmittance'].values
     @property
     def sigma_t(self):
-        raise NotImplementedError()
         return self['sigma_t'].values
     
     def save(self, filepath):
         if not filepath[-4:] =='.txt':
             filepath = filepath + '.txt.'
-        np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
+        if 'reflectance' in self.keys() and 'transmittance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, self.transmittance, self.sigma_t])
+        elif 'reflectance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
+        else:
+            np.savetxt(filepath, np.c_[self.wavelength, self.transmittance, self.sigma_t])
 
 class Sample:
     '''
