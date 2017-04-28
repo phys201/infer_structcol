@@ -6,7 +6,6 @@ import numpy as np
 import structcol as sc
 from structcol import montecarlo as mc
 import structcol.refractive_index as ri
-
 from infer_structcol import main 
 
 def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, seed=None):
@@ -81,8 +80,10 @@ def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, se
                                         sample_index[i], detection_angle=np.pi/2)
         reflection.append(R_fraction)
         
-    # Uncertainties are 1 standard deviation of 100 typical runs
-    wavelength_sigma = sc.Quantity(np.arange(450.0,810.0,10.0), 'nm')        
+    # Define an array for the visible wavelengths 
+    wavelength_sigma = sc.Quantity(np.arange(450.0,810.0,10.0), 'nm')
+    # The uncertainty for the reflection fraction is taken to be 1 standard
+    # deviation from the mean, and was calculated using the results of 100 identical runs.
     sigma_measured = np.array([2.931712774077597020e-02, 2.732862042239197695e-02, 2.372715146455805016e-02, 
              2.474964384227144529e-02, 2.745171731244393926e-02, 2.617463528791452027e-02,
              2.328581430854679071e-02, 2.487518756643465265e-02, 2.669051976970928178e-02,
@@ -100,4 +101,4 @@ def calc_reflectance(volume_fraction, Sample, ntrajectories=300, nevents=100, se
     wavelength_ind = main.find_close_indices(wavelength_sigma, wavelength)
     sigma = sigma_measured[np.array(wavelength_ind)]
 
-    return main.Spectrum(wavelength.magnitude, np.array(reflection), sigma)
+    return main.Spectrum(wavelength.magnitude, reflectance = np.array(reflection), sigma_r = sigma)
