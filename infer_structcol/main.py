@@ -150,6 +150,9 @@ def check_wavelength(obj1, obj2):
     raise ValueError("Wavelength mismatch.")
 
 def convert_dtype(inval):
+    '''
+    Converts value to double precision float.
+    '''
     if np.isscalar(inval):
         inval = [inval]
     return np.array(inval).astype('float64')
