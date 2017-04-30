@@ -17,17 +17,24 @@ class Spectrum(pd.DataFrame):
         reflectance values at each wavelength
     reflectance_sigma: array of length N
         uncertainty on each reflection value
-    transmission_data: NOT IMPLEMENTED
-        will contain similar information to reflection
+    transmittance: array of length N
+        reflectance values at each wavelength
+    tranmittance_sigma: array of length N
+        uncertainty on each reflection value
     '''
 
-    def __init__(self, wavelength, reflectance, reflectance_sigma, transmission_data=None):
-        if transmission_data is not None:
-            raise NotImplementedError()
-        if np.isscalar(wavelength):
-            wavelength = [wavelength]
-        super(Spectrum,self).__init__({"wavelength":wavelength, "reflectance":reflectance, "sigma_r":reflectance_sigma})        
-
+    def __init__(self, wavelength, **kwargs):
+        if 'reflectance' in kwargs and 'transmittance' in kwargs:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r']),
+            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])})
+        elif 'reflectance' in kwargs:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r'])})       
+        else:
+            super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
+            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])}) 
+            
     
 
     @property
@@ -41,17 +48,20 @@ class Spectrum(pd.DataFrame):
         return self['sigma_r'].values
     @property
     def transmittance(self):
-        raise NotImplementedError()
-        return self['transmission'].values
+        return self['transmittance'].values
     @property
     def sigma_t(self):
-        raise NotImplementedError()
         return self['sigma_t'].values
     
     def save(self, filepath):
         if not filepath[-4:] =='.txt':
             filepath = filepath + '.txt.'
-        np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
+        if 'reflectance' in self.keys() and 'transmittance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, self.transmittance, self.sigma_t])
+        elif 'reflectance' in self.keys():
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
+        else:
+            np.savetxt(filepath, np.c_[self.wavelength, self.transmittance, self.sigma_t])
 
 class Sample:
     '''
@@ -77,15 +87,11 @@ class Sample:
     def __init__(self, wavelength, particle_radius, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
         self.particle_radius = particle_radius # can we do something clever here with units? maybe using pint?
         self.thickness = thickness # again with the units
+        self.wavelength = convert_dtype(wavelength)
 
-        if np.isscalar(wavelength):
-            wavelength = [wavelength]
-        self.wavelength = np.array(wavelength)
-        n_wavelength = len(wavelength)
-
-        self.particle_index = extend_array(particle_index, n_wavelength)
-        self.matrix_index = extend_array(matrix_index, n_wavelength)
-        self.medium_index = extend_array(medium_index, n_wavelength)
+        self.particle_index = extend_array(particle_index, len(self.wavelength))
+        self.matrix_index = extend_array(matrix_index, len(self.wavelength))
+        self.medium_index = extend_array(medium_index, len(self.wavelength))
         self.incident_angle = incident_angle
 
 def extend_array(val, n):
@@ -99,8 +105,7 @@ def extend_array(val, n):
     n: int
         desired length of array
     '''
-    if np.isscalar(val):
-        val = np.array([val])
+    val = convert_dtype(val)
     if len(val) == n:
         return val
     elif len(val) == 1:
@@ -143,3 +148,11 @@ def check_wavelength(obj1, obj2):
     if np.all(obj1.wavelength == obj2.wavelength):
         return obj1.wavelength
     raise ValueError("Wavelength mismatch.")
+
+def convert_dtype(inval):
+    '''
+    Converts value to double precision float.
+    '''
+    if np.isscalar(inval):
+        inval = [inval]
+    return np.array(inval).astype('float64')

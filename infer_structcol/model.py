@@ -13,6 +13,8 @@ from .run_structcol import calc_reflectance
 min_phi = 0.35
 max_phi = 0.73
 
+minus_inf = -1e100 # required since emcee throws errors if we actually pass in -inf
+
 def calc_model_spect(sample, theta, seed=None):
     ''''
     Calculates a corrected theoretical spectrom from a set of parameters.
@@ -51,7 +53,7 @@ def calc_resid_spect(spect1, spect2):
     '''
     residual = spect1.reflectance - spect2.reflectance
     sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
-    return Spectrum(check_wavelength(spect1, spect2), residual, sigma_eff)
+    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
 
 def calc_log_prior(theta):
     '''
@@ -109,7 +111,7 @@ def log_posterior(theta, data_spectrum, sample, seed=None):
     log_prior = calc_log_prior(theta)
     if log_prior == -np.inf:
         # don't bother running MC
-        return log_prior
+        return minus_inf
 
     theory_spectrum = calc_model_spect(sample, theta, seed)
     likelihood = calc_likelihood(data_spectrum, theory_spectrum)
