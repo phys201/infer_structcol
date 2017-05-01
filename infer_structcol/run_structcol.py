@@ -116,4 +116,4 @@ def calc_refl_trans(volume_fraction, Sample, ntrajectories=300, nevents=100, see
     sigma = sigma_measured[np.array(wavelength_ind)]
 
     return main.Spectrum(wavelength.magnitude, reflectance = np.array(reflectance), 
-                         transmittance = np.array(transmittance), sigma_r = sigma)
+                         transmittance = np.array(transmittance), sigma_r = sigma, sigma_t = sigma)
