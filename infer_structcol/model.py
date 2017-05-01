@@ -121,17 +121,17 @@ def calc_likelihood(spect1, spect2):
         calculated dataset
     '''
     resid_spect = calc_resid_spect(spect1, spect2)
-    if 'reflectance' in spect1.keys() and 'transmittance' in spect1.keys():        
-        chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2
-                          + resid_spect.transmittance**2/resid_spect.sigma_t**2)
-        sigma_eff = np.sqrt(resid_spect.sigma_r**2 + resid_spect.sigma_t**2) 
-        prefactor = 1/np.prod( sigma_eff * np.sqrt(2*np.pi))
-    elif 'reflectance' in spect1.keys():
-        chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
-        prefactor = 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
-    else:
-        chi_square = np.sum(resid_spect.transmittance**2/resid_spect.sigma_t**2)
-        prefactor = 1/np.prod(resid_spect.sigma_t * np.sqrt(2*np.pi))
+    chi_square = 0.
+    prefactor = 1.
+
+    if 'reflectance' in spect1.keys():
+        chi_square += np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
+        prefactor *= 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
+
+    if 'transmittance' in spect1.keys():
+        chi_square += np.sum(resid_spect.transmittance**2/resid_spect.sigma_t**2)
+        prefactor *= 1/np.prod(resid_spect.sigma_t * np.sqrt(2*np.pi))
+
     return prefactor * np.exp(-chi_square/2)
 
 def log_posterior(theta, data_spectrum, sample, seed=None):
@@ -140,7 +140,7 @@ def log_posterior(theta, data_spectrum, sample, seed=None):
     
     Parameters
     -------
-    theta: 3-tuple 
+    theta: 3- or 5-tuple 
         set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
     data_spectrum: Spectrum object
         experimental dataset
