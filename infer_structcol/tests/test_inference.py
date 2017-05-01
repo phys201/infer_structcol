@@ -1,3 +1,7 @@
+'''
+This file tests functions from inference.py.
+'''
+
 from infer_structcol.inference import find_max_like, run_mcmc
 from infer_structcol.main import Sample, Spectrum
 from infer_structcol.model import calc_model_spect
@@ -15,5 +19,6 @@ def test_run_mcmc():
     spectrum = Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     sample = Sample(500, 200, 200, 1.5, 1)
     theta = (0.5, 0, 0)
+    # Test that run_mcmc runs correctly
     run_mcmc(spectrum, sample, nwalkers=6, nsteps=1, theta=theta, seed=2)
 

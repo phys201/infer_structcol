@@ -1,3 +1,7 @@
+'''
+This file tests functions from io.py.
+'''
+
 import os
 import shutil
 import numpy as np
