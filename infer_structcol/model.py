@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import emcee
 from .main import Spectrum, rescale, check_wavelength
-from .run_structcol import calc_reflectance
+from .run_structcol import calc_refl_trans
 
 # define limits of validity for the MC scattering model
 min_phi = 0.35
@@ -23,17 +23,27 @@ def calc_model_spect(sample, theta, seed=None):
     -------
     sample: Sample object
         information about the sample that produced data_spectrum
-    theta: 3-tuple 
-        set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
+    theta: 3- or 5-tuple 
+        set of inference parameter values - volume fraction, reflection baseline loss,
+        reflection wavelength dependent loss, transmission baseline loss,
+        transmission wavelength dependent loss
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scatterin calculation
     '''
-
-    phi, l0, l1 = theta
-    loss = l0 + l1*rescale(sample.wavelength)
-    theory_spectrum = calc_reflectance(phi, sample, seed=seed)
-    theory_spectrum['reflectance'] *= (1-loss)
-    theory_spectrum['sigma_r'] *= (1-loss)
+    if len(theta) == 5:
+        phi, l0_r, l1_r, l0_t, l1_t = theta
+        loss_r = l0_r + l1_r*rescale(sample.wavelength)
+        loss_t = l0_t + l1_t*rescale(sample.wavelength)
+    if len(theta) == 3:
+        phi, l0, l1 = theta 
+        loss_r = l0 + l1*rescale(sample.wavelength)
+        loss_t = l0 + l1*rescale(sample.wavelength)
+    
+    theory_spectrum = calc_refl_trans(phi, sample, seed=seed)
+    theory_spectrum['reflectance'] *= (1-loss_r)
+    theory_spectrum['sigma_r'] *= (1-loss_r)
+    theory_spectrum['transmittance'] *= (1-loss_t)
+    theory_spectrum['sigma_t'] *= (1-loss_t)
     return theory_spectrum
 
 def calc_resid_spect(spect1, spect2):
@@ -51,8 +61,23 @@ def calc_resid_spect(spect1, spect2):
     -------
     Spectrum object: contains residuals and uncertainties at each wavelength
     '''
-    residual = spect1.reflectance - spect2.reflectance
-    sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
+    if 'reflectance' in spect1.keys() and 'transmittance' in spect1.keys():
+        residual_r = spect1.reflectance - spect2.reflectance
+        residual_t = spect1.transmittance - spect2.transmittance
+        sigma_eff_r = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
+        sigma_eff_t = np.sqrt(spect1.sigma_t**2 + spect2.sigma_t**2)
+        return Spectrum(check_wavelength(spect1, spect2), 
+                        reflectance = residual_r, sigma_r = sigma_eff_r,
+                        transmittance = residual_t, sigma_t = sigma_eff_t)
+    elif 'reflectance' in spect1.keys():
+        residual = spect1.reflectance - spect2.reflectance
+        sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
+        return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
+    else:
+        residual = spect1.transmittance - spect2.transmittance
+        sigma_eff = np.sqrt(spect1.sigma_t**2 + spect2.sigma_t**2)
+        return Spectrum(check_wavelength(spect1, spect2), transmittance = residual, sigma_t = sigma_eff)
+    
     return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
 
 def calc_log_prior(theta):
@@ -61,14 +86,22 @@ def calc_log_prior(theta):
     
     Parameters
     -------
-    theta: 3-tuple 
+    theta: 3-, 5-tuple 
         set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
     '''
-    vol_frac, l0, l1 = theta
-
-    if l0 < 0 or l0 > 1 or l0+l1 <0 or l0+l1 > 1:
-        # Losses are not in range [0,1] for some wavelength
-        return -np.inf 
+    if len(theta) == 5:
+        vol_frac, l0_r, l1_r, l0_t, l1_t = theta
+        if l0_r < 0 or l0_r > 1 or l0_r+l1_r <0 or l0_r+l1_r > 1:
+            # Losses are not in range [0,1] for some wavelength
+            return -np.inf 
+        if l0_t < 0 or l0_t > 1 or l0_t+l1_t <0 or l0_t+l1_t > 1:
+            # Losses are not in range [0,1] for some wavelength
+            return -np.inf 
+    if len(theta) == 3:
+        vol_frac, l0, l1 = theta
+        if l0 < 0 or l0 > 1 or l0+l1 <0 or l0+l1 > 1:
+            # Losses are not in range [0,1] for some wavelength
+            return -np.inf 
 
     if not min_phi < vol_frac < max_phi:
         # Outside range of validity of multiple scattering model
@@ -88,8 +121,17 @@ def calc_likelihood(spect1, spect2):
         calculated dataset
     '''
     resid_spect = calc_resid_spect(spect1, spect2)
-    chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
-    prefactor = 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
+    if 'reflectance' in spect1.keys() and 'transmittance' in spect1.keys():        
+        chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2
+                          + resid_spect.transmittance**2/resid_spect.sigma_t**2)
+        sigma_eff = np.sqrt(resid_spect.sigma_r**2 + resid_spect.sigma_t**2) 
+        prefactor = 1/np.prod( sigma_eff * np.sqrt(2*np.pi))
+    elif 'reflectance' in spect1.keys():
+        chi_square = np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
+        prefactor = 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
+    else:
+        chi_square = np.sum(resid_spect.transmittance**2/resid_spect.sigma_t**2)
+        prefactor = 1/np.prod(resid_spect.sigma_t * np.sqrt(2*np.pi))
     return prefactor * np.exp(-chi_square/2)
 
 def log_posterior(theta, data_spectrum, sample, seed=None):
