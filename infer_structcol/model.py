@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import emcee
 from .main import Spectrum, rescale, check_wavelength
-from .run_structcol import calc_reflectance
+from .run_structcol import calc_refl_trans
 
 # define limits of validity for the MC scattering model
 min_phi = 0.35

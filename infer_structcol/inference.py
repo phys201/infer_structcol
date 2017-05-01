@@ -9,7 +9,7 @@ import emcee
 import lmfit
 
 from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, log_posterior
-from .run_structcol import calc_reflectance
+from .run_structcol import calc_refl_trans
 
 def find_max_like(data, sample, seed=None):
     '''
