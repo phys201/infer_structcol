@@ -1,3 +1,7 @@
+'''
+This file tests functions from model.py.
+'''
+
 from infer_structcol.model import *
 from infer_structcol.main import Spectrum, Sample
 import numpy as np
@@ -28,7 +32,7 @@ def test_prior():
 def test_likelihood():
     spect1=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     spect2=Spectrum(500, reflectance = 0.7, sigma_r = 0)
-    expected_output1 = 1/np.sqrt(2*np.pi*0.01)*np.exp(-2)
+    expected_output1 = 1 / np.sqrt(2*np.pi*0.01) * np.exp(-2)
     assert_approx_equal(calc_likelihood(spect1, spect2), expected_output1)
 
 def test_log_posterior():

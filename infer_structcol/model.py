@@ -17,7 +17,7 @@ minus_inf = -1e100 # required since emcee throws errors if we actually pass in -
 
 def calc_model_spect(sample, theta, seed=None):
     ''''
-    Calculates a corrected theoretical spectrom from a set of parameters.
+    Calculates a corrected theoretical spectrum from a set of parameters.
     
     Parameters
     -------
