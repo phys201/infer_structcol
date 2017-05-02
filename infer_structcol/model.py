@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import emcee
 from .main import Spectrum, rescale, check_wavelength
-from .run_structcol import calc_reflectance
+from .run_structcol import calc_refl_trans
 
 # define limits of validity for the MC scattering model
 min_phi = 0.35
@@ -31,7 +31,7 @@ def calc_model_spect(sample, theta, seed=None):
 
     phi, l0, l1 = theta
     loss = l0 + l1*rescale(sample.wavelength)
-    theory_spectrum = calc_reflectance(phi, sample, seed=seed)
+    theory_spectrum = calc_refl_trans(phi, sample, seed=seed)
     theory_spectrum['reflectance'] *= (1-loss)
     theory_spectrum['sigma_r'] *= (1-loss)
     return theory_spectrum
