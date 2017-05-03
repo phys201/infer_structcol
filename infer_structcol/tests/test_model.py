@@ -11,7 +11,8 @@ from pandas.util.testing import assert_frame_equal
 def test_calc_model_spect():
     sample = Sample(500, 200, 200, 1.5, 1)
     theta = (0.5, 0, 0)
-    assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, reflectance = 0.507608289932, sigma_r = 0.0261746352879))
+    assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, reflectance = 0.507608289932, sigma_r = 0.0261746352879, 
+                       transmittance = 1.0, sigma_t = 0.0261746352879))
 
 def test_calc_resid_spect():
     spect1=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
@@ -34,11 +35,16 @@ def test_likelihood():
     spect2=Spectrum(500, reflectance = 0.7, sigma_r = 0)
     expected_output1 = 1 / np.sqrt(2*np.pi*0.01) * np.exp(-2)
     assert_approx_equal(calc_likelihood(spect1, spect2), expected_output1)
+    
+    #spect1=Spectrum(500, reflectance = 0.5, sigma_r = 0.1, transmittance = 0.3, sigma_t = 0.1)
+    #spect2=Spectrum(500, reflectance = 0.7, sigma_r = 0,  transmittance = 0.2, sigma_t = 0)
+    #expected_output1 = 1 / np.sqrt(2*np.pi*0.01)/ np.sqrt(2*np.pi*0.01) * np.exp(-3)
+    #assert_approx_equal(calc_likelihood(spect1, spect2), expected_output1)
 
 def test_log_posterior():
     spectrum=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     theta = (0.5, 0, 0)
     sample = Sample(500, 200, 200, 1.5, 1)
     post = log_posterior(theta, spectrum, sample, seed=2)
-    assert_approx_equal(post, 1.3478047169617922)
+    assert_approx_equal(post, -10.164433628445313)
     
