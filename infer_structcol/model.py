@@ -41,7 +41,7 @@ def calc_model_spect(sample, theta, seed=None):
     if len(theta) == 3:
         phi, l0, l1 = theta 
         loss_r = l0 + l1*rescale(sample.wavelength)
-        loss_t = l0 + l1*rescale(sample.wavelength)
+        loss_t = loss_r
     
     theory_spectrum = calc_refl_trans(phi, sample, seed=seed)
     theory_spectrum['reflectance'] *= (1-loss_r)

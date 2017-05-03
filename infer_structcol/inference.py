@@ -123,7 +123,9 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     if ndim == 3:
         theta = np.vstack((vf,l0,l1)).T.tolist()
     if ndim == 5:
-        theta = np.vstack((vf,l0,l1,l0,l1)).T.tolist()
+        l0_1 = np.clip(theta[3]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l0, max_l0)
+        l1_1 = np.clip(theta[4]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l1, max_l1)
+        theta = np.vstack((vf,l0,l1,l0_1,l1_1)).T.tolist()
     #theta = [list(theta) + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
 
     # figure out how many threads to use
