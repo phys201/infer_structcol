@@ -28,7 +28,7 @@ def find_max_like(data, sample, seed=None):
     Returns
     -------
     theta: 3 or 5 -tuple
-        best fit (phi, l0, l1) as floats
+        best fit (phi, l0, l1) or (phi, l0, l1, l0, l1) as floats
     '''
     def resid(params):
         if 'reflectance' in data.keys() and 'transmittance' in data.keys():
@@ -104,7 +104,7 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     nsteps: int
         number of steps taken by each walker
     theta: 3 or 5-tuple of floats (optional)
-        user's best guess of the expected parameter values
+        user's best guess of the expected parameter values (phi, l0, l1) or (phi, l0, l1, l0, l1)
     seed: int (optional)
         sets the seed for all MC scattering trajectory chains. 
         DOES NOT set the seed for MCMC walkers.
