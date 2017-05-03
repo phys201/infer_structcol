@@ -12,6 +12,10 @@ from .run_structcol import calc_refl_trans
 # define limits of validity for the MC scattering model
 min_phi = 0.35
 max_phi = 0.73
+min_l0 = 0
+max_l0 = 1
+min_l1 = -1
+max_l1 = 1
 
 minus_inf = -1e100 # required since emcee throws errors if we actually pass in -inf
 
@@ -82,7 +86,7 @@ def calc_resid_spect(spect1, spect2):
 
 def calc_log_prior(theta):
     '''
-    Calculats log of prior probability of obtaining theta.
+    Calculates log of prior probability of obtaining theta.
     
     Parameters
     -------
@@ -157,4 +161,5 @@ def log_posterior(theta, data_spectrum, sample, seed=None):
 
     theory_spectrum = calc_model_spect(sample, theta, seed)
     likelihood = calc_likelihood(data_spectrum, theory_spectrum)
+
     return np.log(likelihood) + log_prior

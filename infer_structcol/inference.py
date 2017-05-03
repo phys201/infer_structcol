@@ -8,7 +8,7 @@ import pandas as pd
 import emcee
 import lmfit
 
-from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, log_posterior
+from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, min_l0, max_l0, min_l1, max_l1, log_posterior
 
 def find_max_like(data, sample, seed=None):
     '''
@@ -34,27 +34,33 @@ def find_max_like(data, sample, seed=None):
     def resid(params):
         if 'reflectance' in data.keys() and 'transmittance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'], params['l0_t'], params['l1_t'])
+            theory_spect = calc_model_spect(sample, theta, seed)
+            resid_spect = calc_resid_spect(data, theory_spect)
+            return np.ndarray.flatten(np.vstack([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t]))
         elif 'reflectance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'])
+            theory_spect = calc_model_spect(sample, theta, seed)
+            resid_spect = calc_resid_spect(data, theory_spect)
+            return resid_spect.reflectance/resid_spect.sigma_r
         else:
             theta = (params['phi'], params['l0_t'], params['l1_t'])
-        theory_spect = calc_model_spect(sample, theta, seed)
-        resid_spect = calc_resid_spect(data, theory_spect)
-        return resid_spect.reflectance/resid_spect.sigma_r
+            theory_spect = calc_model_spect(sample, theta, seed)
+            resid_spect = calc_resid_spect(data, theory_spect)
+            return resid_spect.transmittance/resid_spect.sigma_t
 
     fit_params = lmfit.Parameters()
     fit_params['phi'] = lmfit.Parameter(value=.55, min=min_phi, max=max_phi)
         
     if 'reflectance' in data.keys():
-        fit_params['l0_r'] = lmfit.Parameter(value=0, min=0, max=1)
-        fit_params['l1_r'] = lmfit.Parameter(value=0, min=-1, max=1)
+        fit_params['l0_r'] = lmfit.Parameter(value=0, min=min_l0, max=max_l0)
+        fit_params['l1_r'] = lmfit.Parameter(value=0, min=min_l1, max=max_l1)
 
     if 'transmittance' in data.keys(): 
-        fit_params['l0_t'] = lmfit.Parameter(value=0, min=0, max=1)
-        fit_params['l1_t'] = lmfit.Parameter(value=0, min=-1, max=1)
+        fit_params['l0_t'] = lmfit.Parameter(value=0, min=min_l0, max=max_l0)
+        fit_params['l1_t'] = lmfit.Parameter(value=0, min=min_l1, max=max_l1)
         
     fit_params = lmfit.minimize(resid, fit_params).params
-    return (fit_params.valuesdict().values())
+    return tuple(fit_params.valuesdict().values())
 
 def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi_guess = 0.55):
     '''
@@ -113,9 +119,16 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
         theta = find_max_like(data, sample, seed)
 
     ndim = len(theta)
-
+    
     # set walkers in a distribution with width .05
-    theta = [theta + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
+    vf = np.clip(theta[0]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_phi, max_phi)
+    l0 = np.clip(theta[1]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l0, max_l0)
+    l1 = np.clip(theta[2]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l1, max_l1)
+    if ndim == 3:
+        theta = np.vstack((vf,l0,l1)).T.tolist()
+    if ndim == 5:
+        theta = np.vstack((vf,l0,l1,l0,l1)).T.tolist()
+    #theta = [list(theta) + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
 
     # figure out how many threads to use
     nthreads = np.min([nwalkers, mp.cpu_count()])
