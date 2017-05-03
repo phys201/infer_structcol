@@ -65,24 +65,21 @@ def calc_resid_spect(spect1, spect2):
     -------
     Spectrum object: contains residuals and uncertainties at each wavelength
     '''
-    if 'reflectance' in spect1.keys() and 'transmittance' in spect1.keys():
+    nan_array = np.full(spect1.wavelength.shape, np.nan)
+    residual_r = nan_array
+    residual_t = nan_array
+    sigma_eff_r = nan_array
+    sigma_eff_t = nan_array
+
+    if 'reflectance' in spect1.keys() and 'reflectance' in spect2.keys():
         residual_r = spect1.reflectance - spect2.reflectance
-        residual_t = spect1.transmittance - spect2.transmittance
         sigma_eff_r = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
+
+    if 'transmittance' in spect1.keys() and 'transmittance' in spect2.keys():
+        residual_t = spect1.transmittance - spect2.transmittance
         sigma_eff_t = np.sqrt(spect1.sigma_t**2 + spect2.sigma_t**2)
-        return Spectrum(check_wavelength(spect1, spect2), 
-                        reflectance = residual_r, sigma_r = sigma_eff_r,
-                        transmittance = residual_t, sigma_t = sigma_eff_t)
-    elif 'reflectance' in spect1.keys():
-        residual = spect1.reflectance - spect2.reflectance
-        sigma_eff = np.sqrt(spect1.sigma_r**2 + spect2.sigma_r**2)
-        return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
-    else:
-        residual = spect1.transmittance - spect2.transmittance
-        sigma_eff = np.sqrt(spect1.sigma_t**2 + spect2.sigma_t**2)
-        return Spectrum(check_wavelength(spect1, spect2), transmittance = residual, sigma_t = sigma_eff)
-    
-    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual, sigma_r = sigma_eff)
+
+    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual_r, sigma_r = sigma_eff_r, transmittance = residual_t, sigma_t = sigma_eff_t)
 
 def calc_log_prior(theta):
     '''
@@ -128,11 +125,11 @@ def calc_likelihood(spect1, spect2):
     chi_square = 0.
     prefactor = 1.
 
-    if 'reflectance' in spect1.keys():
+    if 'reflectance' in spect1.keys() and 'reflectance' in spect2.keys():
         chi_square += np.sum(resid_spect.reflectance**2/resid_spect.sigma_r**2)
         prefactor *= 1/np.prod(resid_spect.sigma_r * np.sqrt(2*np.pi))
 
-    if 'transmittance' in spect1.keys():
+    if 'transmittance' in spect1.keys() and 'transmittance' in spect2.keys():
         chi_square += np.sum(resid_spect.transmittance**2/resid_spect.sigma_t**2)
         prefactor *= 1/np.prod(resid_spect.sigma_t * np.sqrt(2*np.pi))
 

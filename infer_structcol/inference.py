@@ -33,19 +33,16 @@ def find_max_like(data, sample, seed=None):
     def resid(params):
         if 'reflectance' in data.keys() and 'transmittance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'], params['l0_t'], params['l1_t'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return np.ndarray.flatten(np.vstack([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t]))
         elif 'reflectance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return resid_spect.reflectance/resid_spect.sigma_r
         else:
             theta = (params['phi'], params['l0_t'], params['l1_t'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return resid_spect.transmittance/resid_spect.sigma_t
+
+        theory_spect = calc_model_spect(sample, theta, seed)
+        resid_spect = calc_resid_spect(data, theory_spect)
+
+        resid = np.concatenate([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t])
+        return resid[np.isfinite(resid)]
 
     fit_params = lmfit.Parameters()
     fit_params['phi'] = lmfit.Parameter(value=.55, min=min_phi, max=max_phi)
