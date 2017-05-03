@@ -84,7 +84,7 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     nsteps: int
         number of steps taken by each walker
     theta: 3-tuple of floats (optional)
-        user's best guess of the expected parameter values
+        user's best guess of the expected parameter values (phi, l0, l1) 
     seed: int (optional)
         sets the seed for all MC scattering trajectory chains. 
         DOES NOT set the seed for MCMC walkers.
