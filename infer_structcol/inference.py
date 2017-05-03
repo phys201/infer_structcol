@@ -58,7 +58,7 @@ def find_max_like(data, sample, seed=None):
     fit_params = lmfit.minimize(resid, fit_params).params
     return tuple(fit_params.valuesdict().values())
 
-def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi_guess = 0.55):
+def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0):
     '''
     Calls run_mcmc and outputs pandas DataFrame of parameters and log-probability
     
@@ -78,16 +78,16 @@ def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0, phi_
         user's best guess of the expected volume fraction
     '''    
 
-    walkers = run_mcmc(data, sample, nwalkers, nsteps, phi_guess)
+    walkers = run_mcmc(data, sample, nwalkers, nsteps)
     ndim = data.shape[1] # number of parameters happens to be equal to number of columns in data
     traces = np.concatenate([walkers.chain[:,burn_in_time:,:], walkers.lnprobability[:,burn_in_time:,np.newaxis]],axis=2).reshape(-1, ndim+1).T
     params = ['vol_frac']
     if 'reflectance' in data.keys():
-        params.append('l0_r','l1_r')
+        params.extend(('l0_r','l1_r'))
     if 'transmittance' in data.keys():
-        params.append('l0_r','l1_t')
+        params.extend(('l0_r','l1_t'))
     params.append('lnprob')
-    return pd.DataFrame({key: traces[val] for val, key in enumerate(params)})
+    return walkers, pd.DataFrame({key: traces[val] for val, key in enumerate(params)})
 
 def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     '''
