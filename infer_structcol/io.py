@@ -135,7 +135,7 @@ def load_spectrum(**kwargs):
             raise ValueError("""Wavelengths of transmittance and reflectance 
             spectra do not match""")
         return Spectrum(refl_filedata[:,0], 
-                        relfectance = refl_filedata[:,1], 
+                        reflectance = refl_filedata[:,1], 
                         sigma_r = refl_filedata[:,2], 
                         transmittance = trans_filedata[:,1], 
                         sigma_t = trans_filedata[:,2])
