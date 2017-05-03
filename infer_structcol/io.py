@@ -12,9 +12,9 @@ from .main import Spectrum, find_close_indices
 
 def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
-    loads spectrum data for a given set of wavelengths 
+    Loads spectrum data for a given set of wavelengths 
     All data must consist of two, tab-separated columns. The fist is the 
-    wavelength, and the second is the intensity.
+    wavelength, and the second is the normalized reflection or transmission fraction.
     
     Parameters
     ----------
@@ -68,7 +68,7 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
 
 def calc_norm_spec(ref, dark, spec):
     '''
-    calculates a normalized spectrum 
+    Calculates a normalized spectrum.
     
     Parameters
     -------
@@ -92,8 +92,8 @@ def calc_norm_spec(ref, dark, spec):
 
 def convert_data(wavelen, ref_file, dark_file, directory = ''):
     '''
-    write loaded experimental data to file in columns wavelength, 
-    normalized intensity, and standard deviation, respectively
+    Write loaded experimental data to file in columns wavelength, 
+    normalized intensity, and standard deviation, respectively.
     
     Parameters
     -------

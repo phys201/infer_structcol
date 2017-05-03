@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import emcee
 import lmfit
-
 from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, min_l0, max_l0, min_l1, max_l1, log_posterior
 
 def find_max_like(data, sample, seed=None):
