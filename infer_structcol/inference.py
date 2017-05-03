@@ -28,24 +28,21 @@ def find_max_like(data, sample, seed=None):
     Returns
     -------
     theta: 3 or 5 -tuple
-        best fit (phi, l0, l1) as floats
+        best fit (phi, l0, l1) or (phi, l0, l1, l0, l1) as floats
     '''
     def resid(params):
         if 'reflectance' in data.keys() and 'transmittance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'], params['l0_t'], params['l1_t'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return np.ndarray.flatten(np.vstack([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t]))
         elif 'reflectance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return resid_spect.reflectance/resid_spect.sigma_r
         else:
             theta = (params['phi'], params['l0_t'], params['l1_t'])
-            theory_spect = calc_model_spect(sample, theta, seed)
-            resid_spect = calc_resid_spect(data, theory_spect)
-            return resid_spect.transmittance/resid_spect.sigma_t
+
+        theory_spect = calc_model_spect(sample, theta, seed)
+        resid_spect = calc_resid_spect(data, theory_spect)
+
+        resid = np.concatenate([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t])
+        return resid[np.isfinite(resid)]
 
     fit_params = lmfit.Parameters()
     fit_params['phi'] = lmfit.Parameter(value=.55, min=min_phi, max=max_phi)
@@ -106,8 +103,8 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
         number of parallelized MCMC walkers to use
     nsteps: int
         number of steps taken by each walker
-    theta: 3-tuple of floats (optional)
-        user's best guess of the expected parameter values (phi, l0, l1) 
+    theta: 3 or 5-tuple of floats (optional)
+        user's best guess of the expected parameter values (phi, l0, l1) or (phi, l0, l1, l0, l1)
     seed: int (optional)
         sets the seed for all MC scattering trajectory chains. 
         DOES NOT set the seed for MCMC walkers.
