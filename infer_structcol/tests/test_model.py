@@ -13,8 +13,8 @@ import warnings
 def test_calc_model_spect():
     sample = Sample(500, 100, 200, 1.5, 1)
     theta = (0.5, 0, 0, 0, 0)
-    assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, reflectance = 0.802078258246, sigma_r = 0.0197423674667, 
-                       transmittance =0.197921741754, sigma_t = 0.0197423674667))
+    assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, reflectance = 0.813006364656, sigma_r = 0.0226350830535, 
+                       transmittance =0.186993635344, sigma_t = 0.0226350830535))
 
 def test_calc_resid_spect():
     spect1=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
@@ -44,5 +44,5 @@ def test_log_posterior():
     theta = (0.5, 0, 0)
     sample = Sample(500, 200, 200, 1.5, 1)
     post = log_posterior(theta, spectrum, sample, seed=2)
-    assert_approx_equal(post, -4.641245127360716)
+    assert_approx_equal(post, -6.418847855673672)
     
