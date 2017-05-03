@@ -12,7 +12,7 @@ from numpy.testing import assert_almost_equal
 def test_io():
     # convert the spectrum
     filepath = os.path.dirname(os.path.abspath(__file__))
-    direc = os.path.join(filepath, 'test_data')
+    direc = os.path.join(filepath, 'test_data', 'simulated_data')
     convert_data(np.array([450,600,800]), 'ref.txt', 'dark.txt', directory = os.path.join(direc, 'reflection'))
     
     # load the spectrum, creating a spectrum object
@@ -21,8 +21,8 @@ def test_io():
     
     # check if equal to previously converted data
     assert_almost_equal(spectrum.wavelength[0],450)
-    assert_almost_equal(spectrum.reflectance[0],0.35540140170390377)
-    assert_almost_equal(spectrum.sigma_r[0],0.019663046306703093)
+    assert_almost_equal(spectrum.reflectance[0],0.69539503485890797)
+    assert_almost_equal(spectrum.sigma_r[0],0.020389159991071586)
     
     spectrum.save(convert_direc)
 

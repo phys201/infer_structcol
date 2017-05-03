@@ -9,7 +9,7 @@ from numpy.testing import assert_equal, assert_almost_equal
 def test_structcol_import():
     # Test that montecarlo.py is imported and Trajectory object is imported correctly
     from structcol import montecarlo as mc
-    dummy_trajectory = mc.Trajectory("position", "direction", "weight", "nevents")
+    dummy_trajectory = mc.Trajectory("position", "direction", "weight")
     assert_equal(dummy_trajectory.position, "position")
     
 def test_run_structcol():
@@ -31,5 +31,5 @@ def test_run_structcol():
                                                           thickness, particle_index, 
                                                           matrix_index, medium_index, 
                                                           incident_angle), seed=1)
-    outarray = np.array([0.59395, 0.56222])
+    outarray = np.array([0.85201,  0.7326])
     assert_almost_equal(spectrum.reflectance, outarray, decimal=5)
