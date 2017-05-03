@@ -8,7 +8,10 @@
 *~
 
 # converted test data files
-infer_structcol/tests/test_data/converted*
+infer_structcol/tests/test_data/experimental_data/reflection/converted*
+infer_structcol/tests/test_data/experimental_data/transmission/converted*
+infer_structcol/tests/test_data/simulated_data/reflection/converted*
+infer_structcol/tests/test_data/simulated_data/transmission/converted*
 
 # Distribution / packaging
 build/
