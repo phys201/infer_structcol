@@ -31,8 +31,7 @@ def find_max_like(data, sample, seed=None):
         best fit (phi, l0, l1) as floats
     '''
     def resid(params):
-
-        if 'reflectance' in data.keys():
+        if 'reflectance' in data.keys() and 'transmittance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'], params['l0_t'], params['l1_t'])
         elif 'reflectance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'])
