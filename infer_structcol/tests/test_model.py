@@ -17,7 +17,7 @@ def test_calc_model_spect():
 def test_calc_resid_spect():
     spect1=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     spect2=Spectrum(500, reflectance = 0.7, sigma_r = 0)
-    expected_output = Spectrum(500, reflectance = 0.2, sigma_r = 0.1)
+    expected_output = Spectrum(500, reflectance = 0.2, sigma_r = 0.1, transmission = np.nan, sigma_t = np.nan)
     assert_frame_equal(calc_resid_spect(spect2, spect1), expected_output)
 
 def test_prior():
