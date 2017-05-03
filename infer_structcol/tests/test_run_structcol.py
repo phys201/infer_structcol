@@ -31,5 +31,5 @@ def test_run_structcol():
                                                           thickness, particle_index, 
                                                           matrix_index, medium_index, 
                                                           incident_angle), seed=1)
-    outarray = np.array([0.59395, 0.56222])
+    outarray = np.array([0.92992, 0.79385])
     assert_almost_equal(spectrum.reflectance, outarray, decimal=5)
