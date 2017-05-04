@@ -28,11 +28,12 @@ def calc_model_spect(sample, theta, seed=None):
     sample: Sample object
         information about the sample that produced data_spectrum
     theta: 3- or 5-tuple 
-        set of inference parameter values - volume fraction, reflection baseline loss,
-        reflection wavelength dependent loss, transmission baseline loss,
+        set of inference parameter values - volume fraction, reflection baseline 
+        loss, reflection wavelength dependent loss, transmission baseline loss,
         transmission wavelength dependent loss
     seed: int (optional)
-        if specified, passes the seed through to the MC multiple scatterin calculation
+        if specified, passes the seed through to the MC multiple scattering 
+        calculation
     '''
     if len(theta) == 5:
         phi, l0_r, l1_r, l0_t, l1_t = theta
@@ -79,7 +80,9 @@ def calc_resid_spect(spect1, spect2):
         residual_t = spect1.transmittance - spect2.transmittance
         sigma_eff_t = np.sqrt(spect1.sigma_t**2 + spect2.sigma_t**2)
 
-    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual_r, sigma_r = sigma_eff_r, transmittance = residual_t, sigma_t = sigma_eff_t)
+    return Spectrum(check_wavelength(spect1, spect2), reflectance = residual_r, 
+                    sigma_r = sigma_eff_r, transmittance = residual_t, 
+                    sigma_t = sigma_eff_t)
 
 def calc_log_prior(theta):
     '''
@@ -88,7 +91,8 @@ def calc_log_prior(theta):
     Parameters
     -------
     theta: 3-, 5-tuple 
-        set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
+        set of inference parameter values - volume fraction, baseline loss, 
+        wavelength dependent loss
     '''
     if len(theta) == 5:
         vol_frac, l0_r, l1_r, l0_t, l1_t = theta
@@ -112,7 +116,8 @@ def calc_log_prior(theta):
 
 def calc_likelihood(spect1, spect2):
     '''
-    Returns likelihood of obtaining an experimental dataset from a given theoretical spectrum
+    Returns likelihood of obtaining an experimental dataset from a given 
+    theoretical spectrum
 
     Parameters
     -------
@@ -137,18 +142,21 @@ def calc_likelihood(spect1, spect2):
 
 def log_posterior(theta, data_spectrum, sample, seed=None):
     '''
-    Calculates log-posterior of a set of parameters producing an observed reflectance spectrum
+    Calculates log-posterior of a set of parameters producing an observed 
+    reflectance spectrum
     
     Parameters
     -------
     theta: 3- or 5-tuple 
-        set of inference parameter values - volume fraction, baseline loss, wavelength dependent loss
+        set of inference parameter values - volume fraction, baseline loss, 
+        wavelength dependent loss
     data_spectrum: Spectrum object
         experimental dataset
     sample: Sample object
         information about the sample that produced data_spectrum
     seed: int (optional)
-        if specified, passes the seed through to the MC multiple scatterin calculation
+        if specified, passes the seed through to the MC multiple scattering 
+        calculation
     '''    
     check_wavelength(data_spectrum, sample) # not used for anything, but we need to run the check.
     log_prior = calc_log_prior(theta)

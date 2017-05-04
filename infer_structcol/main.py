@@ -1,5 +1,6 @@
 '''
-This file contains classes used to handle data and a few simple functions for manipulating numpy arrays. 
+This file contains classes used to handle data and a few simple functions for 
+manipulating numpy arrays. 
 '''
 
 import pandas as pd
@@ -7,7 +8,8 @@ import numpy as np
 
 class Spectrum(pd.DataFrame):
     '''
-    Stores Spectrum data in a pandas DataFrame with a few extra methods and functionality.
+    Stores Spectrum data in a pandas DataFrame with a few extra methods and 
+    functionality.
     
     Parameters
     -------
@@ -26,14 +28,18 @@ class Spectrum(pd.DataFrame):
     def __init__(self, wavelength, **kwargs):
         if 'reflectance' in kwargs and 'transmittance' in kwargs:
             super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
-            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r']),
-            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])})
+            "reflectance":convert_dtype(kwargs['reflectance']), 
+            "sigma_r":convert_dtype(kwargs['sigma_r']),
+            "transmittance":convert_dtype(kwargs['transmittance']), 
+            "sigma_t":convert_dtype(kwargs['sigma_t'])})
         elif 'reflectance' in kwargs:
             super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
-            "reflectance":convert_dtype(kwargs['reflectance']), "sigma_r":convert_dtype(kwargs['sigma_r'])})       
+            "reflectance":convert_dtype(kwargs['reflectance']), 
+            "sigma_r":convert_dtype(kwargs['sigma_r'])})       
         else:
             super(Spectrum,self).__init__({"wavelength":convert_dtype(wavelength), 
-            "transmittance":convert_dtype(kwargs['transmittance']), "sigma_t":convert_dtype(kwargs['sigma_t'])}) 
+            "transmittance":convert_dtype(kwargs['transmittance']), 
+            "sigma_t":convert_dtype(kwargs['sigma_t'])}) 
             
     
 
@@ -57,7 +63,8 @@ class Spectrum(pd.DataFrame):
         if not filepath[-4:] =='.txt':
             filepath = filepath + '.txt.'
         if 'reflectance' in self.keys() and 'transmittance' in self.keys():
-            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, self.transmittance, self.sigma_t])
+            np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r, 
+                                       self.transmittance, self.sigma_t])
         elif 'reflectance' in self.keys():
             np.savetxt(filepath, np.c_[self.wavelength, self.reflectance, self.sigma_r])
         else:
@@ -84,10 +91,11 @@ class Sample:
     incident_angle: scalar
         angle of incident light on the sample
     '''
-    def __init__(self, wavelength, particle_radius, thickness, particle_index, matrix_index, medium_index=1, incident_angle=0):
-        self.particle_radius = particle_radius # can we do something clever here with units? maybe using pint?
-        self.thickness = thickness # again with the units
-        self.wavelength = convert_dtype(wavelength)
+    def __init__(self, wavelength, particle_radius, thickness, particle_index, 
+                 matrix_index, medium_index=1, incident_angle=0):
+        self.particle_radius = particle_radius        # in nm
+        self.thickness = thickness                    # in um
+        self.wavelength = convert_dtype(wavelength)   # in nm
 
         self.particle_index = extend_array(particle_index, len(self.wavelength))
         self.matrix_index = extend_array(matrix_index, len(self.wavelength))

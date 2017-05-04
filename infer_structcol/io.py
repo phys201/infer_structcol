@@ -14,7 +14,8 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
     Loads spectrum data for a given set of wavelengths 
     All data must consist of two, tab-separated columns. The fist is the 
-    wavelength, and the second is the normalized reflection or transmission fraction.
+    wavelength, and the second is the normalized reflection or transmission 
+    fraction.
     
     Parameters
     ----------
@@ -44,13 +45,16 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     # iterate through files in directory, finding reference, dark, and spectra
     for filename in filelist:
         if filename == os.path.join(directory,dark_file):
-            dark = pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True)
+            dark = pd.read_table(filename, 
+                                 names = ['wavelength','intensity']).dropna().reset_index(drop = True)
             dark = dark.apply(pd.to_numeric)
         elif filename == os.path.join(directory,ref_file):
-            ref = pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True)
+            ref = pd.read_table(filename, 
+                                names = ['wavelength','intensity']).dropna().reset_index(drop = True)
             ref = ref.apply(pd.to_numeric)
         else:
-            spec = np.append([spec], [pd.read_table(filename, names = ['wavelength', 'intensity']).dropna().reset_index(drop = True).intensity])
+            spec = np.append([spec], [pd.read_table(filename, 
+                             names = ['wavelength','intensity']).dropna().reset_index(drop = True).intensity])
     
     if dark is None or ref is None:
         raise IOError("Could not find normalization files. Check your path names.")

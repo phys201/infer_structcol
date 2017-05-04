@@ -86,7 +86,7 @@ def calc_refl_trans(volume_fraction, Sample, ntrajectories=300, nevents=200, see
         transmittance.append(T_fraction)
         
     # Define an array for the visible wavelengths 
-    wavelength_sigma = sc.Quantity(np.arange(400,1000,61), 'nm')
+    wavelength_sigma = sc.Quantity(np.linspace(400,1000,61), 'nm')
     # The uncertainty for the reflection fraction is taken to be 1 standard
     # deviation from the mean, and was calculated using the results of 100 identical runs.    
     sigma_measured = np.array([1.578339786806479475e-02, 1.814049675099610806e-02, 2.263508305348480368e-02, 
