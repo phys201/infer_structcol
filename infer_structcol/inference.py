@@ -7,14 +7,16 @@ import numpy as np
 import pandas as pd
 import emcee
 import lmfit
-from .model import calc_model_spect, calc_resid_spect, min_phi, max_phi, min_l0, max_l0, min_l1, max_l1, log_posterior
+from .model import (calc_model_spect, calc_resid_spect, min_phi, max_phi, min_l0, 
+max_l0, min_l1, max_l1, log_posterior)
 
 def find_max_like(data, sample, seed=None):
     '''
     Uses lmfit to approximate the highest likelihood parameter values.
-    We use likelihood instead of posterior because lmfit requires an array of residuals.
+    We use likelihood instead of posterior because lmfit requires an array of 
+    residuals.
 
-    Prameters
+    Parameters
     ---------
     data: Spectrum object
         experimental dataset
@@ -23,7 +25,8 @@ def find_max_like(data, sample, seed=None):
     phi_guess: float
         user's best guess of the expected volume fraction
     seed: int (optional)
-        if specified, passes the seed through to the MC multiple scatterin calculation
+        if specified, passes the seed through to the MC multiple scatterin 
+        calculation
 
     Returns
     -------
@@ -32,7 +35,8 @@ def find_max_like(data, sample, seed=None):
     '''
     def resid(params):
         if 'reflectance' in data.keys() and 'transmittance' in data.keys():
-            theta = (params['phi'], params['l0_r'], params['l1_r'], params['l0_t'], params['l1_t'])
+            theta = (params['phi'], params['l0_r'], params['l1_r'], 
+                     params['l0_t'], params['l1_t'])
         elif 'reflectance' in data.keys():
             theta = (params['phi'], params['l0_r'], params['l1_r'])
         else:
@@ -41,7 +45,8 @@ def find_max_like(data, sample, seed=None):
         theory_spect = calc_model_spect(sample, theta, seed)
         resid_spect = calc_resid_spect(data, theory_spect)
 
-        resid = np.concatenate([resid_spect.reflectance/resid_spect.sigma_r, resid_spect.transmittance/resid_spect.sigma_t])
+        resid = np.concatenate([resid_spect.reflectance/resid_spect.sigma_r, 
+                                resid_spect.transmittance/resid_spect.sigma_t])
         return resid[np.isfinite(resid)]
 
     fit_params = lmfit.Parameters()
@@ -58,37 +63,6 @@ def find_max_like(data, sample, seed=None):
     fit_params = lmfit.minimize(resid, fit_params).params
     return tuple(fit_params.valuesdict().values())
 
-def get_distribution(data, sample, nwalkers=50, nsteps=500, burn_in_time=0):
-    '''
-    Calls run_mcmc and outputs pandas DataFrame of parameters and log-probability
-    
-    Parameters
-    -------
-    data: Spectrum object
-        experimental dataset
-    sample: Sample object
-        information about the sample that produced data_spectrum
-    nwalkers: int (even)
-        number of parallelized MCMC walkers to use
-    nsteps: int
-        number of steps taken by each walker
-    burn_in_time: int
-        number of inital steps to be removed from the returned samples
-    phi_guess: float
-        user's best guess of the expected volume fraction
-    '''    
-
-    walkers = run_mcmc(data, sample, nwalkers, nsteps)
-    ndim = data.shape[1] # number of parameters happens to be equal to number of columns in data
-    traces = np.concatenate([walkers.chain[:,burn_in_time:,:], walkers.lnprobability[:,burn_in_time:,np.newaxis]],axis=2).reshape(-1, ndim+1).T
-    params = ['vol_frac']
-    if 'reflectance' in data.keys():
-        params.extend(('l0_r','l1_r'))
-    if 'transmittance' in data.keys():
-        params.extend(('l0_r','l1_t'))
-    params.append('lnprob')
-    return walkers, pd.DataFrame({key: traces[val] for val, key in enumerate(params)})
-
 def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     '''
     Performs actual mcmc calculation. Returns an Emcee Sampler object. 
@@ -104,7 +78,8 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     nsteps: int
         number of steps taken by each walker
     theta: 3 or 5-tuple of floats (optional)
-        user's best guess of the expected parameter values (phi, l0, l1) or (phi, l0, l1, l0, l1)
+        user's best guess of the expected parameter values (phi, l0, l1) or 
+        (phi, l0, l1, l0, l1)
     seed: int (optional)
         sets the seed for all MC scattering trajectory chains. 
         DOES NOT set the seed for MCMC walkers.
@@ -117,21 +92,27 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta = None, seed=None):
     ndim = len(theta)
     
     # set walkers in a distribution with width .05
-    vf = np.clip(theta[0]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_phi, max_phi)
-    l0 = np.clip(theta[1]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l0, max_l0)
-    l1 = np.clip(theta[2]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l1, max_l1)
+    vf = np.clip(theta[0]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), 
+                 min_phi, max_phi)
+    l0 = np.clip(theta[1]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), 
+                 min_l0, max_l0)
+    l1 = np.clip(theta[2]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), 
+                 min_l1, max_l1)
     if ndim == 3:
         theta = np.vstack((vf,l0,l1)).T.tolist()
     if ndim == 5:
-        l0_1 = np.clip(theta[3]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l0, max_l0)
-        l1_1 = np.clip(theta[4]*np.ones(nwalkers) + 0.05*np.random.randn(nwalkers), min_l1, max_l1)
+        l0_1 = np.clip(theta[3]*np.ones(nwalkers) + 
+                       0.05*np.random.randn(nwalkers), min_l0, max_l0)
+        l1_1 = np.clip(theta[4]*np.ones(nwalkers) + 
+                       0.05*np.random.randn(nwalkers), min_l1, max_l1)
         theta = np.vstack((vf,l0,l1,l0_1,l1_1)).T.tolist()
     #theta = [list(theta) + 0.05*np.random.randn(ndim) for i in range(nwalkers)]
 
     # figure out how many threads to use
     nthreads = np.min([nwalkers, mp.cpu_count()])
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[data, sample, seed], threads=nthreads)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, 
+                                    args=[data, sample, seed], threads=nthreads)
     sampler.run_mcmc(theta, nsteps)
     return sampler
 
