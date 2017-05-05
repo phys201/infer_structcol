@@ -13,7 +13,7 @@ from .main import Spectrum, find_close_indices
 def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
     '''
     Loads spectrum data for a given set of wavelengths 
-    All data must consist of two, tab-separated columns. The fist is the 
+    All data must consist of two, tab-separated columns. The first is the 
     wavelength, and the second is the normalized reflection or transmission 
     fraction.
     

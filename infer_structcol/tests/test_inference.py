@@ -5,13 +5,10 @@ This file tests functions from inference.py.
 from infer_structcol.inference import find_max_like, run_mcmc
 from infer_structcol.main import Sample, Spectrum
 from infer_structcol.model import calc_model_spect
-import pandas as pd
 import warnings
 from numpy.testing import assert_equal, assert_almost_equal
 
-
 def test_find_max_like():
-    warnings.simplefilter('ignore', UserWarning)
     sample = Sample([450, 500, 550], particle_radius=119, thickness=120, 
                     particle_index=1.59, matrix_index=1)
     theta = (0.55, 0, 0, 0, 0) #these are the default starting values for lmfit calculation
@@ -20,6 +17,7 @@ def test_find_max_like():
     assert_almost_equal(max_like_vals, theta)
 
 def test_run_mcmc():
+    warnings.simplefilter('ignore', UserWarning)
     spectrum = Spectrum(500, reflectance = 0.5, transmittance = 0.5, 
                         sigma_r = 0.1, sigma_t = 0.1)
     sample = Sample(500, 200, 200, 1.5, 1)
