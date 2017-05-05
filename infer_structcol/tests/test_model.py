@@ -7,8 +7,6 @@ from infer_structcol.main import Spectrum, Sample
 import numpy as np
 from numpy.testing import assert_equal, assert_approx_equal
 from pandas.util.testing import assert_frame_equal
-import warnings
-
 
 def test_calc_model_spect():
     sample = Sample(500, 100, 200, 1.5, 1)
@@ -49,7 +47,6 @@ def test_likelihood():
     assert_approx_equal(calc_likelihood(spect1, spect2), expected_output)
 
 def test_log_posterior():
-    warnings.simplefilter('ignore', UserWarning)
     spectrum=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     sample = Sample(500, 200, 200, 1.5, 1)
 
