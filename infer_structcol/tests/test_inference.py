@@ -7,9 +7,6 @@ from infer_structcol.main import Sample, Spectrum
 from infer_structcol.model import calc_model_spect
 from numpy.testing import assert_equal, assert_almost_equal
 
-import warnings
-warnings.simplefilter('ignore', UserWarning)
-
 def test_find_max_like():
     sample = Sample([450, 500, 550], particle_radius=119, thickness=120, 
                     particle_index=1.59, matrix_index=1)
@@ -24,4 +21,4 @@ def test_run_mcmc():
     sample = Sample(500, 200, 200, 1.5, 1)
     theta = (0.5, 0, 0, 0, 0)
     # Test that run_mcmc runs correctly
-    run_mcmc(spectrum, sample, nwalkers=10, nsteps=1, theta=theta, seed=2)
+    run_mcmc(spectrum, sample, nwalkers=10, nsteps=1, theta=theta, seed=3)
