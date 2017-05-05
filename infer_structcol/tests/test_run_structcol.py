@@ -5,8 +5,8 @@ This file tests functions from run_structcol.py.
 import infer_structcol
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
-from ..run_structcol import calc_refl_trans
-from ..main import Sample
+from infer_structcol.run_structcol import calc_refl_trans
+from infer_structcol.main import Sample
 
 def test_structcol_import():
     # Test that montecarlo.py is imported and Trajectory object is imported correctly

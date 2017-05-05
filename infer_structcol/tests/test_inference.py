@@ -5,7 +5,6 @@ This file tests functions from inference.py.
 from infer_structcol.inference import find_max_like, run_mcmc
 from infer_structcol.main import Sample, Spectrum
 from infer_structcol.model import calc_model_spect
-import warnings
 from numpy.testing import assert_equal, assert_almost_equal
 
 def test_find_max_like():
@@ -17,10 +16,9 @@ def test_find_max_like():
     assert_almost_equal(max_like_vals, theta)
 
 def test_run_mcmc():
-    warnings.simplefilter('ignore', UserWarning)
     spectrum = Spectrum(500, reflectance = 0.5, transmittance = 0.5, 
                         sigma_r = 0.1, sigma_t = 0.1)
     sample = Sample(500, 200, 200, 1.5, 1)
     theta = (0.5, 0, 0, 0, 0)
     # Test that run_mcmc runs correctly
-    run_mcmc(spectrum, sample, nwalkers=10, nsteps=1, theta=theta, seed=2)
+    run_mcmc(spectrum, sample, nwalkers=10, nsteps=1, theta=theta, seed=3)

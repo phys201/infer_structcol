@@ -9,5 +9,5 @@ setup(name='infer_structcol',
       license='GNU GPL v3',
       packages=['infer_structcol'],
       install_requires=['structcol>=0.2','numpy', 'scipy','emcee','matplotlib', 'pint', 'lmfit'],
-      dependency_links=['http://github.com/manoharan-lab/structural-color/tarball/master#egg=structcol'],
+      dependency_links=['http://github.com/manoharan-lab/structural-color/tarball/master#egg=structcol-0.2'],
       zip_safe=False)
