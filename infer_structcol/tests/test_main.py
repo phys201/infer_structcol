@@ -28,7 +28,7 @@ def test_Spectrum():
     
 def test_Sample():
     # Test if Sample object is created correctly 
-    samp = Sample([300,500],0.5, 100, 1.5, 1.3)
+    samp = Sample([300,500], 1.5, 1.3)
     assert_equal(samp.particle_index, np.array([1.5, 1.5]))
 
 def test_extend_array():
@@ -48,7 +48,7 @@ def test_find_close_indices():
 
 def test_check_wavelength():
     spect = Spectrum([300,500], reflectance = [0.5,0.5], sigma_r = [0.1,0.1])
-    samp = Sample([300,500],0.5, 100, 1.5, 1.3)
+    samp = Sample([300,500], 1.5, 1.3)
     assert_equal(check_wavelength(spect, samp), samp.wavelength)
     
 def test_convert_dtype():

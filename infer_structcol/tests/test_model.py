@@ -9,11 +9,11 @@ from numpy.testing import assert_equal, assert_approx_equal
 from pandas.util.testing import assert_frame_equal
 
 def test_calc_model_spect():
-    sample = Sample(500, 100, 200, 1.5, 1)
-    theta = (0.5, 0, 0, 0, 0)
+    sample = Sample(500, 1.5, 1)
+    theta = (0.5, 100, 200, 0, 0, 0, 0)
     assert_frame_equal(calc_model_spect(sample, theta, 2), Spectrum(500, 
-                       reflectance = 0.813006364656, sigma_r = 0.025358376581, 
-                       transmittance =0.186993635344, sigma_t = 0.025358376581))
+                       reflectance = 0.828595524325, sigma_r = 0.0193369922424, 
+                       transmittance =0.171404475675, sigma_t = 0.0193369922424))
 
 def test_calc_resid_spect():
     spect1=Spectrum(500, reflectance = 0.5, transmittance = 0.5, sigma_r = 0.1, 
@@ -24,21 +24,28 @@ def test_calc_resid_spect():
     assert_frame_equal(calc_resid_spect(spect2, spect1), expected_output)
 
 def test_log_prior():
+    theta_range = np.array([[0.35,0.74],[70,160],[1,1000]])
     # Test different conditions with only reflectance or transmittance 
-    assert_approx_equal(calc_log_prior((0.5, 0, 1)), 0)
-    assert_approx_equal(calc_log_prior((0.5, 1,-1)), 0)
-    assert_equal(calc_log_prior((0.5,-0.5,1)), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0,1.5)), -np.inf)
-    assert_equal(calc_log_prior((1.0, 1, 1)), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0, 1)), calc_log_prior((0.6, 0, 1)))
-
+    assert_approx_equal(calc_log_prior((0.5, 100, 100, 0, 1), theta_range), 0)
+    assert_approx_equal(calc_log_prior((0.5, 100, 100, 1,-1), theta_range), 0)
+    assert_equal(calc_log_prior((0.5, 100, 100, -0.5,1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 100, 100, 0,1.5), theta_range), -np.inf)
+    assert_equal(calc_log_prior((1.0, 100, 100, 1, 1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 10, 100, 0, 1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 300, 100, 0, 1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 100, 100, 0, 1), theta_range), calc_log_prior((0.6, 100, 100, 0, 1), theta_range))
+    assert_equal(calc_log_prior((0.5, 100, 1001, 0.5, 0.1), theta_range), -np.inf)
+    
     # Tests for when there is both reflectance and transmittance 
-    assert_approx_equal(calc_log_prior((0.5, 0, 0, 0, 1)), 0)
-    assert_approx_equal(calc_log_prior((0.5, 0, 0, 1, -1)), 0)
-    assert_equal(calc_log_prior((0.5,-0.5, 1, -0.5, 1)), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0, 1.5, 0, 1.5)), -np.inf)
-    assert_equal(calc_log_prior((1.0, 1, 1, 1, 1)), -np.inf)
-    assert_equal(calc_log_prior((0.5, 0, 1, 0, 1)), calc_log_prior((0.6, 0, 1, 0, 1)))
+    assert_approx_equal(calc_log_prior((0.5, 100, 100, 0, 0, 0, 1), theta_range), 0)
+    assert_approx_equal(calc_log_prior((0.5, 100, 100, 0, 0, 1, -1), theta_range), 0)
+    assert_equal(calc_log_prior((0.5, 100, 100, -0.5, 1, -0.5, 1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 100, 100, 0, 1.5, 0, 1.5), theta_range), -np.inf)
+    assert_equal(calc_log_prior((1.0, 100, 100, 1, 1, 1, 1), theta_range), -np.inf)
+    assert_approx_equal(calc_log_prior((0.5, 10, 100, 0, 0, 0, 1), theta_range), -np.inf)
+    assert_approx_equal(calc_log_prior((0.5, 300, 100, 0, 0, 1, -1), theta_range), -np.inf)
+    assert_equal(calc_log_prior((0.5, 100, 100, 0, 1, 0, 1), theta_range), calc_log_prior((0.6, 100, 100, 0, 1, 0, 1), theta_range))
+    assert_equal(calc_log_prior((0.5, 100, 1001, 0.5, 0.1, 0.1, 0.1), theta_range), -np.inf)
     
 def test_likelihood():
     spect1=Spectrum(500, reflectance = 0.5, transmittance = 0.5, sigma_r = 0.1, sigma_t = 0.)
@@ -48,15 +55,16 @@ def test_likelihood():
 
 def test_log_posterior():
     spectrum=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
-    sample = Sample(500, 200, 200, 1.5, 1)
-
+    sample = Sample(500, 1.5, 1)
+    theta_range = np.array([[0.35,0.74],[70,160],[1,1000]])
+    
     # When parameters are within prior range
-    theta1 = (0.5, 0, 0)
-    post1 = log_posterior(theta1, spectrum, sample, seed=2)
-    assert_approx_equal(post1, -6.329515523909971)
+    theta1 = (0.5, 150, 200, 0, 0)
+    post1 = log_posterior(theta1, spectrum, sample, theta_range=theta_range, seed=2)
+    assert_approx_equal(post1, -6.024443395023755)
     
     # When parameters are not within prior range
-    theta2 = (0.3, 0, 0)
-    post2 = log_posterior(theta2, spectrum, sample, seed=2)
+    theta2 = (0.3, 200, 200, 0, 0)
+    post2 = log_posterior(theta2, spectrum, sample, theta_range=theta_range, seed=2)
     assert_approx_equal(post2, -1e100)
     
