@@ -9,13 +9,16 @@ import emcee
 import lmfit
 from .model import (calc_model_spect, calc_resid_spect, log_posterior)
 
-# define limits of validity for the MC scattering model
+# define limits of validity for the MC scattering model. These values were 
+# chosen such that they encompass the widest range of physically meaningful values
 theta_range_default = {'min_phi':0.1, 'max_phi':0.74, 'min_radius':10., 
                        'max_radius': 1000., 'min_thickness':1., 'max_thickness':1000., 
                        'min_l0_r':0, 'max_l0_r':1, 'min_l1_r':-1, 'max_l1_r':1,
                        'min_l0_t':0, 'max_l0_t':1, 'min_l1_t':-1, 'max_l1_t':1}  # radius in nm, thickness in um
 
-# define initial guesses for theta in case the user doesn't give an initial guess
+# define initial guesses for theta in case the user doesn't give an initial guess. 
+# These values were arbitrarily chosen. It is highly recommended that the user
+# passes a good initial guess based on their knowledge of the system. 
 theta_guess_default = {'phi':0.5, 'radius':120, 'thickness':100, 'l0_r':0.02, 
                        'l1_r':0, 'l0_t':0.02, 'l1_t':0}  # radius in nm, thickness in um
 
