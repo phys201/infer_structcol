@@ -9,18 +9,6 @@ import emcee
 from .main import Spectrum, rescale, check_wavelength
 from .run_structcol import calc_refl_trans
 
-# define limits of validity for the MC scattering model
-min_phi = 0.35
-max_phi = 0.73
-min_radius = 70. # in nm
-max_radius = 201. # in nm
-min_thickness = 1. # in um
-max_thickness = 1000. # in um
-min_l0 = 0
-max_l0 = 1
-min_l1 = -1
-max_l1 = 1
-
 minus_inf = -1e100 # required since emcee throws errors if we actually pass in -inf
 
 def calc_model_spect(sample, theta, seed=None):
@@ -97,9 +85,10 @@ def calc_log_prior(theta, theta_range):
     theta: 5-, 7-tuple 
         set of inference parameter values - volume fraction, particle radius, 
         thickness, baseline loss, wavelength dependent loss
-    theta_range: 2 by 3 array of floats
-        user's best guess of the expected ranges of the parameter values 
-        ([[min_phi, max_phi], [min_radius, max_radius], [min_thickness, max_thickness]]) 
+    theta_range: dictionary
+        best guess of the expected ranges of the parameter values 
+        (min_phi, max_phi, min_radius, max_radius, min_thickness, max_thickness, 
+        min_l0_r, max_l0_r, min_l1_r, max_l1_r, min_l0_t, max_l0_t, min_l1_t, max_l1_t)) 
     
     '''
     if len(theta) == 7:
@@ -116,16 +105,16 @@ def calc_log_prior(theta, theta_range):
             # Losses are not in range [0,1] for some wavelength
             return -np.inf 
 
-    if not theta_range[0,0] < vol_frac < theta_range[0,1]:
-        # Outside range of validity of multiple scattering model
+    if not theta_range['min_phi'] < vol_frac < theta_range['max_phi']:
+        # Outside range of prior values
         return -np.inf
 
-    if not theta_range[1,0] < radius < theta_range[1,1]:
-        # Outside range of validity of multiple scattering model
+    if not theta_range['min_radius'] < radius < theta_range['max_radius']:
+        # Outside range of prior values
         return -np.inf
     
-    if not theta_range[2,0] < thickness < theta_range[2,1]:
-        # Outside range of validity of multiple scattering model
+    if not theta_range['min_thickness'] < thickness < theta_range['max_thickness']:
+        # Outside range of prior values
         return -np.inf
     
     return 0
@@ -170,9 +159,10 @@ def log_posterior(theta, data_spectrum, sample, theta_range, seed=None):
         experimental dataset
     sample: Sample object
         information about the sample that produced data_spectrum
-    theta_range: 2 by 3 array of floats 
-        user's best guess of the expected ranges of the parameter values 
-        ([[min_phi, max_phi], [min_radius, max_radius], [min_thickness, max_thickness]]) 
+    theta_range: dictionary
+        best guess of the expected ranges of the parameter values 
+        (min_phi, max_phi, min_radius, max_radius, min_thickness, max_thickness, 
+        min_l0_r, max_l0_r, min_l1_r, max_l1_r, min_l0_t, max_l0_t, min_l1_t, max_l1_t)) 
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scattering 
         calculation

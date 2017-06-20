@@ -24,7 +24,9 @@ def test_calc_resid_spect():
     assert_frame_equal(calc_resid_spect(spect2, spect1), expected_output)
 
 def test_log_prior():
-    theta_range = np.array([[0.35,0.74],[70,160],[1,1000]])
+    theta_range = {'min_phi':0.35, 'max_phi':0.74, 'min_radius':70, 'max_radius': 160, 
+               'min_thickness':1, 'max_thickness':1000}
+
     # Test different conditions with only reflectance or transmittance 
     assert_approx_equal(calc_log_prior((0.5, 100, 100, 0, 1), theta_range), 0)
     assert_approx_equal(calc_log_prior((0.5, 100, 100, 1,-1), theta_range), 0)
@@ -56,12 +58,13 @@ def test_likelihood():
 def test_log_posterior():
     spectrum=Spectrum(500, reflectance = 0.5, sigma_r = 0.1)
     sample = Sample(500, 1.5, 1)
-    theta_range = np.array([[0.35,0.74],[70,160],[1,1000]])
-    
+    theta_range = {'min_phi':0.35, 'max_phi':0.74, 'min_radius':70, 'max_radius': 201, 
+               'min_thickness':1, 'max_thickness':1000}
+        
     # When parameters are within prior range
-    theta1 = (0.5, 150, 200, 0, 0)
+    theta1 = (0.5, 200, 200, 0, 0)
     post1 = log_posterior(theta1, spectrum, sample, theta_range=theta_range, seed=2)
-    assert_approx_equal(post1, -6.024443395023755)
+    assert_approx_equal(post1, -6.0413752765269875)
     
     # When parameters are not within prior range
     theta2 = (0.3, 200, 200, 0, 0)

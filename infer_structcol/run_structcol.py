@@ -114,7 +114,7 @@ def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories=60
                                6.271285385383303969e-03, 7.198737679024127048e-03, 5.980837995132812224e-03, 
                                6.166925243497538289e-03, 6.148309644049101616e-03, 6.087239500545048483e-03, 
                                6.549083556399931151e-03])
-                                   
+
     # Find the uncertainties corresponding to each wavelength     
     wavelength_ind = main.find_close_indices(wavelength_sigma, wavelength)
     sigma = sigma_measured[np.array(wavelength_ind)]
