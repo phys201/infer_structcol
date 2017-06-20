@@ -5,6 +5,7 @@ manipulating numpy arrays.
 
 import pandas as pd
 import numpy as np 
+from os import listdir
 
 class Spectrum(pd.DataFrame):
     '''
@@ -158,3 +159,16 @@ def convert_dtype(inval):
     if np.isscalar(inval):
         inval = [inval]
     return np.array(inval).astype('float64')
+
+def find_filenames(directory, suffix=".csv" ):
+    '''
+    This function lists all the csv (by default) files in a directory.
+    
+    Parameter
+    ---------
+    directory : str
+        directory where csv files are stored
+    
+    '''
+    filenames = listdir(directory)
+    return [filename for filename in filenames if filename.endswith(suffix)]
