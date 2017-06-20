@@ -34,7 +34,7 @@ def load_exp_data(wavelen, ref_file, dark_file, directory = ''):
         array with columns for wavelength and intensity from ref measurement
     spec: numpy array
         multidimentional array where first dimension is number of spectrum 
-        measurements and second dimension is wavlengths
+        measurements and second dimension is wavelengths
     
     '''
     filelist = glob.glob(os.path.join(directory,'*.txt'))
@@ -103,15 +103,11 @@ def convert_data(wavelen, ref_file, dark_file, directory = ''):
     -------
     wavelen: array-like
         wavelengths for which spectrum values should be loaded
-    dark: pandas array
+    dark_file: pandas array
         array with columns for wavelength and intensity from dark measurement
-    ref: pandas array
+    ref_file: pandas array
         array with columns for wavelength and intensity from ref measurement
-    spec: numpy array
-        multidimentional array where first dimension is number of spectrum 
-        measurements and second dimension is wavlengths
-    single_spec: array-like
-        array of intensity data for singe data set of interest
+
     '''
 
     ref, dark, spec = load_exp_data(wavelen, ref_file, dark_file, directory)

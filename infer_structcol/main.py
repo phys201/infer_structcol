@@ -78,10 +78,6 @@ class Sample:
     -------
     wavelength: array of length N
         wavelengths corresponding to refractive indices
-    particle_radius: int or float
-        size of particles (in nm)
-    thickness: int or float
-        sample thickness (in um)
     particle_index: array of length N or scalar
         refractive index of particles at each wavelength
     matrix_index: array of length N or scalar
@@ -91,10 +87,8 @@ class Sample:
     incident_angle: scalar
         angle of incident light on the sample
     '''
-    def __init__(self, wavelength, particle_radius, thickness, particle_index, 
+    def __init__(self, wavelength, particle_index, 
                  matrix_index, medium_index=1, incident_angle=0):
-        self.particle_radius = particle_radius        # in nm
-        self.thickness = thickness                    # in um
         self.wavelength = convert_dtype(wavelength)   # in nm
 
         self.particle_index = extend_array(particle_index, len(self.wavelength))

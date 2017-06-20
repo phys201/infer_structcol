@@ -27,10 +27,9 @@ def test_run_structcol():
     incident_angle = 0.0
     medium_index = np.array([1.0, 1.0]) 
     
-    spectrum = calc_refl_trans(volume_fraction, Sample(wavelength, particle_radius, 
-                                                          thickness, particle_index, 
-                                                          matrix_index, medium_index, 
-                                                          incident_angle), seed=1)
+    spectrum = calc_refl_trans(volume_fraction, particle_radius, thickness, 
+                               Sample(wavelength, particle_index, matrix_index, 
+                                      medium_index, incident_angle), seed=1)
 
-    outarray = np.array([0.8531,  0.7529])
+    outarray = np.array([0.84576,  0.74796])
     assert_almost_equal(spectrum.reflectance, outarray, decimal=5)
