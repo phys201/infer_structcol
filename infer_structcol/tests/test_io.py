@@ -6,7 +6,8 @@ import os
 import shutil
 import numpy as np
 import infer_structcol
-from infer_structcol.io import convert_data,load_spectrum
+from infer_structcol.io import load_spectrum
+from infer_structcol.format_converter import convert_data
 from numpy.testing import assert_almost_equal
 
 def test_io():
