@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 import emcee
 from .main import Spectrum, rescale, check_wavelength
-from .run_structcol import calc_refl_trans
+from .run_structcol import calc_refl_trans, calc_sigma
 
 minus_inf = -1e100 # required since emcee throws errors if we actually pass in -inf
 
-def calc_model_spect(sample, theta, seed=None):
+def calc_model_spect(sample, theta, sigma, ntrajectories, nevents, seed=None):
     ''''
     Calculates a corrected theoretical spectrum from a set of parameters.
     
@@ -23,6 +23,13 @@ def calc_model_spect(sample, theta, seed=None):
         set of inference parameter values - volume fraction, particle radius, 
         thickness, reflection baseline loss, reflection wavelength dependent loss, 
         transmission baseline loss, transmission wavelength dependent loss
+    sigma: 2-tuple
+        uncertainties (taken to be 1 standard deviation) of the multiple scattering
+        calculations (reflectance sigma, transmittance sigma).
+    ntrajectories: int
+        number of trajectories for the multiple scattering calculations
+    nevents: int
+        number of scattering events for the multiple scattering calculations
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scattering 
         calculation
@@ -36,11 +43,19 @@ def calc_model_spect(sample, theta, seed=None):
         loss_r = l0 + l1*rescale(sample.wavelength)
         loss_t = loss_r
     
-    theory_spectrum = calc_refl_trans(phi, radius, thickness, sample, seed=seed)
+    # Calculate the reflectance and transmittance spectra with the multiple
+    # scattering model
+    sigma_r, sigma_t = sigma
+    refl, trans = calc_refl_trans(phi, radius, thickness, sample, ntrajectories, nevents, seed=seed)
+    
+    # Make a spectrum object out of the loss-corrected spectra and their standard deviations 
+    theory_spectrum = Spectrum(sample.wavelength, reflectance = refl, 
+                               transmittance = trans, sigma_r = sigma_r, sigma_t = sigma_t)
     theory_spectrum['reflectance'] *= (1-loss_r)
     theory_spectrum['sigma_r'] *= (1-loss_r)
     theory_spectrum['transmittance'] *= (1-loss_t)
     theory_spectrum['sigma_t'] *= (1-loss_t)
+    
     return theory_spectrum
 
 def calc_resid_spect(spect1, spect2):
@@ -145,7 +160,7 @@ def calc_likelihood(spect1, spect2):
         
     return prefactor * np.exp(-chi_square/2)
 
-def log_posterior(theta, data_spectrum, sample, theta_range, seed=None):
+def log_posterior(theta, data_spectrum, sample, theta_range, sigma, ntrajectories, nevents, seed=None):
     '''
     Calculates log-posterior of a set of parameters producing an observed 
     reflectance spectrum
@@ -163,6 +178,13 @@ def log_posterior(theta, data_spectrum, sample, theta_range, seed=None):
         best guess of the expected ranges of the parameter values 
         (min_phi, max_phi, min_radius, max_radius, min_thickness, max_thickness, 
         min_l0_r, max_l0_r, min_l1_r, max_l1_r, min_l0_t, max_l0_t, min_l1_t, max_l1_t)) 
+    sigma: 2-tuple
+        uncertainties (taken to be 1 standard deviation) of the multiple scattering
+        calculations (reflectance sigma, transmittance sigma).
+    ntrajectories: int
+        number of trajectories for the multiple scattering calculations
+    nevents: int
+        number of scattering events for the multiple scattering calculations
     seed: int (optional)
         if specified, passes the seed through to the MC multiple scattering 
         calculation
@@ -173,7 +195,7 @@ def log_posterior(theta, data_spectrum, sample, theta_range, seed=None):
         # don't bother running MC
         return minus_inf
 
-    theory_spectrum = calc_model_spect(sample, theta, seed)
+    theory_spectrum = calc_model_spect(sample, theta, sigma, ntrajectories, nevents, seed)
     likelihood = calc_likelihood(data_spectrum, theory_spectrum)
 
     if likelihood == 0:

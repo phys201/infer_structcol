@@ -7,8 +7,77 @@ import structcol as sc
 from structcol import montecarlo as mc
 import structcol.refractive_index as ri
 from infer_structcol import main 
+import matplotlib
+from matplotlib import pyplot as plt
+import seaborn as sns
+import os
+sns.set(font_scale=1.3) 
 
-def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories=600, nevents=200, seed=None):
+def calc_sigma(volume_fraction, radius, thickness, Sample, ntrajectories, nevents, run_num=100, plot=False, seed=None):
+    """
+    Calculates the standard deviation of the multiple scattering calculations
+    by running the multiple scattering code run_num times.
+
+    Parameters
+    ----------
+    volume_fraction : float 
+        volume fraction of scatterer in the system
+    radius : float (in nm)
+        radius of scatterer
+    thickness : float (in um)
+        film thickness of sample
+    Sample : Sample object
+        contains information about the sample that produced data
+    ntrajectories : int
+        number of trajectories for the multiple scattering calculations
+    nevents : int
+        number of scattering events for the multiple scattering calculations
+    run_num : int or 100
+        number of runs from which to calculate the standard deviation
+    plot : boolean 
+        If True, plot of the theoretical reflectance and transmittance uncertainties
+    seed : int or None
+        If seed is int, the simulation results will be reproducible. If seed is
+        None, the simulation results are  random.
+    
+    Returns
+    ----------
+    sigma_r : ndarray
+        standard deviation of the reflectance calculation
+    sigma_t : ndarray
+        standard deviation of the transmittance calculation
+        
+    """   
+    wavelength = sc.Quantity(Sample.wavelength, 'nm')
+    
+    reflectance = np.zeros([run_num, len(wavelength)])
+    transmittance = np.zeros([run_num, len(wavelength)])
+    for n in np.arange(run_num):
+         reflectance[n,:], transmittance[n,:] = calc_refl_trans(volume_fraction, radius, thickness, 
+                                                                Sample, ntrajectories, nevents, seed)
+
+    # Calculate mean and standard deviations of reflectance and transmittance
+    sigma_r = np.std(reflectance, axis=0) * np.sqrt(len(wavelength)/(len(wavelength)-1))
+    sigma_t = np.std(transmittance, axis=0) * np.sqrt(len(wavelength)/(len(wavelength)-1))
+    mean_r = np.mean(reflectance, axis=0)
+    mean_t = np.mean(transmittance, axis=0)
+    
+    #np.savetxt(os.path.join(os.getcwd(),'sigma.txt'), np.array([sigma_R, sigma_T]).T)
+    
+    if plot == True:
+        # Plot the mean and standard deviations
+        fig, (ax_r, ax_t) = plt.subplots(2, figsize=(8,10))
+        ax_r.set(ylabel='Reflectance')
+        ax_t.set(ylabel='Transmittance')
+        ax_t.set(xlabel='Wavelength (nm)')
+        ax_r.errorbar(wavelength.magnitude, mean_r, yerr=sigma_r, fmt='.')
+        ax_t.errorbar(wavelength.magnitude, mean_t, yerr=sigma_t, fmt='.')
+        ax_r.set(title='Theoretical reflectance and transmittance +/- 1 standard deviation')
+
+    return(sigma_r, sigma_t)
+    
+
+def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories, nevents, seed):
     """
     Calculates a reflection spectrum using the structcol package.
 
@@ -23,21 +92,19 @@ def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories=60
     Sample : Sample object
         contains information about the sample that produced data
     ntrajectories : int
-        number of trajectories
+        number of trajectories for the multiple scattering calculations
     nevents : int
-        number of scattering events
+        number of scattering events for the multiple scattering calculations
     seed : int or None
         If seed is int, the simulation results will be reproducible. If seed is
         None, the simulation results are  random.
     
     Returns
     ----------
-    reflection : ndarray
-        fraction of reflected trajectories
-    
-    transmission : ndarray
-        fraction of transmitted trajectories
-        
+    reflectance : ndarray
+        fraction of reflected trajectories over the wavelength range
+    transmittance : ndarray
+        fraction of transmitted trajectories over the wavelength range
     """
     # Read in system parameters from the Sample object
     particle_radius = sc.Quantity(radius, 'nm')
@@ -51,8 +118,8 @@ def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories=60
     # Calculate the effective index of the sample
     sample_index = ri.n_eff(particle_index, matrix_index, volume_fraction)        
     
-    reflectance = []
-    transmittance = []
+    reflectance = np.zeros(len(wavelength))
+    transmittance = np.zeros(len(wavelength))
     for i in np.arange(len(wavelength)):    
         # Calculate the phase function and scattering and absorption lengths 
         # from the single scattering model
@@ -83,41 +150,8 @@ def calc_refl_trans(volume_fraction, radius, thickness, Sample, ntrajectories=60
         trajectories.move(step)
 
         # Calculate the reflection fraction 
-        R_fraction, T_fraction = mc.calc_refl_trans(trajectories, sc.Quantity('0.0 um'), 
+        reflectance[i], transmittance[i] = mc.calc_refl_trans(trajectories, sc.Quantity('0.0 um'), 
                                         thickness, medium_index[i], 
                                         sample_index[i], detection_angle=np.pi/2)
-        reflectance.append(R_fraction)
-        transmittance.append(T_fraction)
-        
-    # Define an array for the visible wavelengths 
-    wavelength_sigma = sc.Quantity(np.linspace(400,1000,61), 'nm')
-    # The uncertainty for the reflection fraction is taken to be 1 standard
-    # deviation from the mean, and was calculated using the results of 100 identical runs.    
-    sigma_measured = np.array([1.860651421552072735e-02, 1.753980839818162357e-02, 1.839622738704549398e-02, 
-                               1.596763386664768955e-02, 1.894484659740078986e-02, 1.722962247665738716e-02, 
-                               1.555134197251030123e-02, 1.763293909648367200e-02, 2.027257609441594777e-02, 
-                               1.850550125238413501e-02, 1.933699224240205058e-02, 1.873148138270526453e-02, 
-                               1.908441182529240290e-02, 1.756355142274622708e-02, 1.590192651066632198e-02, 
-                               1.596104976169695697e-02, 2.024553310180053287e-02, 1.955488448380025140e-02, 
-                               1.882008022078682577e-02, 1.796507064336797313e-02, 2.004778422542081301e-02, 
-                               1.811040666898488388e-02, 1.805909831464867776e-02, 1.810327867013098932e-02, 
-                               1.516823124817042248e-02, 1.514314740128578328e-02, 1.696441336804245872e-02, 
-                               1.677168419886158890e-02, 1.132382672347467811e-02, 1.224676407793331805e-02, 
-                               1.117690246951372202e-02, 1.241312684961146107e-02, 1.326040920813134627e-02, 
-                               1.367716094293736952e-02, 1.206014700075800326e-02, 1.250865278649789837e-02, 
-                               1.060414384515132730e-02, 1.036736066347118505e-02, 9.217086600787521497e-03, 
-                               1.110553603581512436e-02, 1.045612311627215976e-02, 9.731754980500811197e-03, 
-                               9.142893085166936898e-03, 9.140217170604352653e-03, 8.149317528863142188e-03, 
-                               7.833831850636231026e-03, 8.968239058921748802e-03, 7.848222412457096439e-03, 
-                               7.609828884008617081e-03, 7.541218020424243600e-03, 7.964287577656070996e-03, 
-                               7.665492573392837863e-03, 7.555737277343346943e-03, 7.034118091273018451e-03, 
-                               6.271285385383303969e-03, 7.198737679024127048e-03, 5.980837995132812224e-03, 
-                               6.166925243497538289e-03, 6.148309644049101616e-03, 6.087239500545048483e-03, 
-                               6.549083556399931151e-03])
-   
-    # Find the uncertainties corresponding to each wavelength     
-    wavelength_ind = main.find_close_indices(wavelength_sigma, wavelength)
-    sigma = sigma_measured[np.array(wavelength_ind)]
 
-    return main.Spectrum(wavelength.magnitude, reflectance = np.array(reflectance), 
-                         transmittance = np.array(transmittance), sigma_r = sigma, sigma_t = sigma)
+    return(reflectance, transmittance)
