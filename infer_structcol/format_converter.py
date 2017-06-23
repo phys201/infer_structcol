@@ -157,7 +157,7 @@ def convert_data_csv(wavelength, directory):
     '''
     filenames = find_filenames(directory)
 
-    # load data lines of each csv file using pandas
+    # load data lines of each column in the csv file using pandas
     df = pd.read_csv(directory + '/' + filenames[0])[1:402]
 
     # find the number of samples in the file by counting how many variables
