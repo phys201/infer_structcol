@@ -13,7 +13,7 @@ import seaborn as sns
 import os
 sns.set(font_scale=1.3) 
 
-def calc_sigma(volume_fraction, radius, thickness, Sample, ntrajectories, nevents, run_num=100, plot=False, seed=None):
+def calc_sigma(volume_fraction, radius, thickness, Sample, ntrajectories, nevents, run_num=100, plot=True, seed=None):
     """
     Calculates the standard deviation of the multiple scattering calculations
     by running the multiple scattering code run_num times.

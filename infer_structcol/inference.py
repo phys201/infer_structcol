@@ -142,7 +142,7 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default,
     # Calculate the standard deviation of the multiple scattering calculations
     # based on number of trajectories and number of scattering events
     sigma = calc_sigma(theta_guess['phi'], theta_guess['radius'], theta_guess['thickness'], 
-                       sample, ntrajectories, nevents, seed=seed)
+                       sample, ntrajectories, nevents, plot=False, seed=seed)
     
     theta = find_max_like(data, sample, theta_guess, theta_range, sigma, ntrajectories, nevents, seed)
     ndim = len(theta)
