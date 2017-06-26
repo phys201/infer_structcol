@@ -8,6 +8,7 @@ import pandas as pd
 import emcee
 import lmfit
 from .model import (calc_model_spect, calc_resid_spect, log_posterior)
+from .run_structcol import calc_sigma
 
 # define limits of validity for the MC scattering model. These values were 
 # chosen such that they encompass the widest range of physically meaningful values
@@ -22,7 +23,7 @@ theta_range_default = {'min_phi':0.1, 'max_phi':0.74, 'min_radius':10.,
 theta_guess_default = {'phi':0.5, 'radius':120, 'thickness':100, 'l0_r':0.02, 
                        'l1_r':0, 'l0_t':0.02, 'l1_t':0}  # radius in nm, thickness in um
 
-def find_max_like(data, sample, theta_guess, theta_range, seed=None):
+def find_max_like(data, sample, theta_guess, theta_range, sigma, ntrajectories, nevents, seed=None):
     '''
     Uses lmfit to approximate the highest likelihood parameter values.
     We use likelihood instead of posterior because lmfit requires an array of 
@@ -34,16 +35,23 @@ def find_max_like(data, sample, theta_guess, theta_range, seed=None):
         experimental dataset
     sample: Sample object
         information about the sample that produced data_spectrum
-    seed: int (optional)
-        if specified, passes the seed through to the MC multiple scattering 
-        calculation
     theta_guess: dictionary 
         best guess of the expected parameter values (phi, radius, thickness, l0_r, l1_r, l0_t, l1_t)
     theta_range: dictionary
         expected ranges of the parameter values 
         (min_phi, max_phi, min_radius, max_radius, min_thickness, max_thickness, 
         min_l0_r, max_l0_r, min_l1_r, max_l1_r, min_l0_t, max_l0_t, min_l1_t, max_l1_t) 
-    
+    sigma: 2-tuple
+        uncertainties (taken to be 1 standard deviation) of the multiple scattering
+        calculations (reflectance sigma, transmittance sigma).
+    ntrajectories: int
+        number of trajectories for the multiple scattering calculations
+    nevents: int
+        number of scattering events for the multiple scattering calculations
+    seed: int (optional)
+        if specified, passes the seed through to the MC multiple scattering 
+        calculation    
+        
     Returns
     -------
     theta: 5 or 7 -tuple
@@ -59,7 +67,7 @@ def find_max_like(data, sample, theta_guess, theta_range, seed=None):
         # make the theta into a tuple
         theta = tuple(theta)
        
-        theory_spect = calc_model_spect(sample, theta, seed)
+        theory_spect = calc_model_spect(sample, theta, sigma, ntrajectories, nevents, seed)
         resid_spect = calc_resid_spect(data, theory_spect)
 
         resid = np.concatenate([resid_spect.reflectance/resid_spect.sigma_r, 
@@ -74,7 +82,8 @@ def find_max_like(data, sample, theta_guess, theta_range, seed=None):
     return tuple(fit_params.valuesdict().values())
 
 
-def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default, theta_range = theta_range_default, seed=None):
+def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default, 
+             theta_range = theta_range_default, ntrajectories=600, nevents=200, seed=None):
     '''
     Performs actual mcmc calculation. Returns an Emcee Sampler object. 
 
@@ -93,6 +102,10 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default, 
     theta_range: dictionary (optional)
         user's best guess of the expected ranges of the parameter values 
         (min_phi, max_phi, min_radius, max_radius, min_thickness, max_thickness) 
+    ntrajectories: int
+        number of trajectories for the multiple scattering calculations
+    nevents: int
+        number of scattering events for the multiple scattering calculations
     seed: int (optional)
         sets the seed for all MC scattering trajectory chains. 
         DOES NOT set the seed for MCMC walkers.
@@ -126,7 +139,12 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default, 
     theta_guess = {key:theta_guess_default[key] for key in guess_keylist}
     theta_range = {key:theta_range_default[key] for key in range_keylist}
 
-    theta = find_max_like(data, sample, theta_guess, theta_range, seed)
+    # Calculate the standard deviation of the multiple scattering calculations
+    # based on number of trajectories and number of scattering events
+    sigma = calc_sigma(theta_guess['phi'], theta_guess['radius'], theta_guess['thickness'], 
+                       sample, ntrajectories, nevents, plot=False, seed=seed)
+    
+    theta = find_max_like(data, sample, theta_guess, theta_range, sigma, ntrajectories, nevents, seed)
     ndim = len(theta)
 
     # set walkers in a distribution with width .05
@@ -156,12 +174,12 @@ def run_mcmc(data, sample, nwalkers, nsteps, theta_guess = theta_guess_default, 
         l1_1 = np.clip((theta[5] + theta[6]) * np.ones(nwalkers) + 
                        0.01*np.random.randn(nwalkers), theta_range_default['min_l1_r'], theta_range_default['max_l1_r']) - l0_1
         theta = np.vstack((vf,radius,thickness,l0,l1,l0_1,l1_1)).T.tolist()
-
+        
     # figure out how many threads to use
     nthreads = np.min([nwalkers, mp.cpu_count()])
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, 
-                                    args=[data, sample, theta_range, seed], threads=nthreads)
+                                    args=[data, sample, theta_range, sigma, ntrajectories, nevents, seed], threads=nthreads)
     sampler.run_mcmc(theta, nsteps)
 
     return sampler
