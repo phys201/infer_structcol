@@ -139,51 +139,89 @@ def calc_norm_spec(ref, dark, spec):
 ###############################################################################
 # For data taken with Agilent Technologies Cary 7000 UMS 
 
-def convert_data_csv(wavelength, directory):
+def convert_data_csv(directory, header, min_wavelength, max_wavelength):
     '''
-    Write experimental data in .csv to file in columns of wavelength, normalized 
-    intensity, and standard deviation, respectively. This function is tailored 
-    to the experimental data that is collected with Agilent Technologies 
-    Cary 7000 UMS integrating sphere. It assumes that the measured wavelengths
-    are 800 to 400 in decreasing order. 
+    Write experimental data in .csv to .txt file in columns of wavelength, 
+    normalized intensity, and standard deviation, respectively. This function 
+    is tailored to the experimental data that is collected with Agilent 
+    Technologies Cary 7000 UMS integrating sphere. This function assumes the 
+    default data output from the software, which consists of each wavelength 
+    column headed by the string 'sample' (e.g. 'sample1', 'sample2', etc), 
+    followed by a column with the reflectance (in %), transmittance (in %), 
+    or absorbance data (fraction). 
     
     Parameters
     ----------
-    wavelength: ndarray
-        wavelengths for which spectrum values should be loaded
     directory : str
         directory where data is stored
-    
-    '''
-    filenames = find_filenames(directory)
-
-    # load data lines of each csv file using pandas
-    df = pd.read_csv(os.path.join(directory,filenames[0]))[1:402]
-
-    # find the number of samples in the file by counting how many variables
-    # containing the string "sample" there are
-    number_samples = df.filter(regex='sample').shape[1]
-
-    # create matrices that contain data, wavelengths, and st dev of all the 
-    # samples. Rows are wavelengths, columns are samples
-    data = np.zeros([len(df),number_samples])
-    for i in np.arange(1, number_samples+1):
-        sample_name = 'sample' + str(i)
-        data[:,i-1] = df.iloc[:, df.columns.get_loc(sample_name)+1]
-        data[:,i-1] = data[:,i-1][::-1] / 100
-            
-    full_wavelength = np.array([int(wl) for wl in df['sample1'][::-1]])
-    wl_ind = find_close_indices(full_wavelength, wavelength)
-    data = data[wl_ind,:]
-    std_dev = np.std(data, axis = 1, ddof = 1)
-
-    # save the wavelengths, data, and st dev into converted txt files
-    directory = os.path.join(directory, 'converted')
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
-    
-    for i in range(number_samples):
-        np.savetxt(os.path.join(directory, str(i)+'_data_file.txt'), 
-                   np.c_[wavelength, data[:,i], std_dev])
+    header : str
+        common header of the columns in the .csv file corresponding to each 
+        sample measurement (e.g. 'sample')
+    min_wavelength : int
+        minimum wavelength recorded in the .csv data
+    max_wavelength : int
+        maximum wavelength recorded in the .csv data
         
+    '''
+    # find all the files in the directory that are .csv
+    filenames = find_filenames(directory)
+    
+    for fn in np.arange(len(filenames)):
+        # load data lines of each csv file using pandas, skip the second row 
+        # that contains the wavelength and data headers
+        df = pd.read_csv(os.path.join(directory,filenames[fn]), skiprows=[1])
+
+        # find the rows in the .csv that correspond to the data and trim the 
+        # dataframe to contain only the data
+        min_wavelength_row = np.where(df[df.columns[0]]==str(min_wavelength))[0]
+        max_wavelength_row = np.where(df[df.columns[0]]==str(max_wavelength))[0]
+        last_data_row = int(max(min_wavelength_row, max_wavelength_row))
+        df = df[:last_data_row+1]
+        
+        # make up a list of the samples by looking for the string 'sample' in 
+        # the header of the spreadsheet columns
+        sample_list = df.filter(regex=header).columns.values
+
+        # make new dataframes for the spectral data of the samples and the 
+        # corresponding wavelengths
+        sample_data = np.zeros([len(df),len(sample_list)])
+        sample_wavelengths = np.zeros([len(df),len(sample_list)])
+        for i in np.arange(len(sample_list)):
+            # get the wavelengths and data for each sample
+            sample_wavelengths[:,i] = df.iloc[:, df.columns.get_loc(sample_list[i])]
+            sample_data[:,i] = df.iloc[:, df.columns.get_loc(sample_list[i])+1]
+    
+            # if the wavelengths are in decreasing order, then revert the order 
+            # of the wavelengths and the data
+            if sample_wavelengths[0,i] > sample_wavelengths[-1,i]:
+                sample_wavelengths[:,i] = sample_wavelengths[:,i][::-1] 
+                sample_data[:,i] = sample_data[:,i][::-1] 
+            
+            # if the data are in percentage (not normalized from 0 to 1), then
+            # divide by 100 
+            if any(data > 1 for data in sample_data[:,i]):   
+                sample_data[:,i] = sample_data[:,i] / 100
+                
+        sample_data = pd.DataFrame(data=sample_data, columns=sample_list)
+        sample_wavelengths = pd.DataFrame(data=sample_wavelengths, columns=sample_list)
+
+        # calculate standard deviation
+        std_dev = sample_data.std(axis = 1, ddof = 1)
+    
+        # save the wavelengths, data, and st dev into converted txt files
+        # if there is more than one .csv file in the directory, then save into 
+        # different folders for each .csv file
+        if len(filenames) > 1:
+            directory_save = os.path.join(directory, 
+                                          filenames[fn].replace('.csv', '')+'_converted')
+        else: 
+            directory_save = os.path.join(directory, 'converted')
+        
+        if not os.path.isdir(directory_save):
+            os.mkdir(directory_save)
+    
+        for i in range(len(sample_list)):
+            np.savetxt(os.path.join(directory_save, str(i)+'_data_file.txt'), 
+                       np.c_[sample_wavelengths[sample_list[i]], 
+                             sample_data[sample_list[i]], std_dev])       
 ###############################################################################
