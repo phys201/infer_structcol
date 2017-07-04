@@ -139,7 +139,7 @@ def calc_norm_spec(ref, dark, spec):
 ###############################################################################
 # For data taken with Agilent Technologies Cary 7000 UMS 
 
-def convert_data_csv(directory, header, min_wavelength, max_wavelength):
+def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample'):
     '''
     Write experimental data in .csv to .txt file in columns of wavelength, 
     normalized intensity, and standard deviation, respectively. This function 
@@ -154,14 +154,13 @@ def convert_data_csv(directory, header, min_wavelength, max_wavelength):
     ----------
     directory : str
         directory where data is stored
-    header : str
-        common header of the columns in the .csv file corresponding to each 
-        sample measurement (e.g. 'sample')
     min_wavelength : int
         minimum wavelength recorded in the .csv data
     max_wavelength : int
         maximum wavelength recorded in the .csv data
-        
+    header : str (optional)
+        common header of the columns in the .csv file corresponding to each 
+        sample measurement (e.g. 'sample')   
     '''
     # find all the files in the directory that are .csv
     filenames = find_filenames(directory)
