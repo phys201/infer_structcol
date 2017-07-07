@@ -166,21 +166,26 @@ def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample')
     filenames = find_filenames(directory)
     
     for fn in np.arange(len(filenames)):
-        # load data lines of each csv file using pandas, skip the second row 
-        # that contains the wavelength and data headers
-        df = pd.read_csv(os.path.join(directory,filenames[fn]), skiprows=[1])
-
+        # load data lines of each csv file using pandas
+        df = pd.read_csv(os.path.join(directory,filenames[fn]))
+        
+        # make up a list of the samples by looking for the string 'sample' in 
+        # the header of the spreadsheet columns
+        sample_list = df.filter(regex=header).columns.values
+        
+        # if the data are in percentage, then divide by 100 (this assumes that 
+        # the all data in the .csv are either in % or normalized from 0 to 1)
+        percent = None
+        if '%'  in df.iloc[0, df.columns.get_loc(sample_list[0])+1]:
+            percent = True
+        
         # find the rows in the .csv that correspond to the data and trim the 
         # dataframe to contain only the data
         min_wavelength_row = np.where(df[df.columns[0]]==str(min_wavelength))[0]
         max_wavelength_row = np.where(df[df.columns[0]]==str(max_wavelength))[0]
         last_data_row = int(max(min_wavelength_row, max_wavelength_row))
-        df = df[:last_data_row+1]
+        df = df[1:last_data_row+1]
         
-        # make up a list of the samples by looking for the string 'sample' in 
-        # the header of the spreadsheet columns
-        sample_list = df.filter(regex=header).columns.values
-
         # make new dataframes for the spectral data of the samples and the 
         # corresponding wavelengths
         sample_data = np.zeros([len(df),len(sample_list)])
@@ -198,7 +203,7 @@ def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample')
             
             # if the data are in percentage (not normalized from 0 to 1), then
             # divide by 100 
-            if any(data > 1 for data in sample_data[:,i]):   
+            if percent == True:           
                 sample_data[:,i] = sample_data[:,i] / 100
                 
         sample_data = pd.DataFrame(data=sample_data, columns=sample_list)
