@@ -13,7 +13,7 @@ import os
 import numpy as np
 import glob
 import pandas as pd
-
+from io import StringIO
 from .main import find_close_indices, find_filenames
 
 
@@ -139,7 +139,7 @@ def calc_norm_spec(ref, dark, spec):
 ###############################################################################
 # For data taken with Agilent Technologies Cary 7000 UMS 
 
-def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample'):
+def convert_data_csv(directory, wavelengths, header='sample'):
     '''
     Write experimental data in .csv to .txt file in columns of wavelength, 
     normalized intensity, and standard deviation, respectively. This function 
@@ -154,13 +154,11 @@ def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample')
     ----------
     directory : str
         directory where data is stored
-    min_wavelength : int
-        minimum wavelength recorded in the .csv data
-    max_wavelength : int
-        maximum wavelength recorded in the .csv data
+    wavelengths : array-like
+        wavelengths for which spectrum values should be loaded 
     header : str (optional)
         common header of the columns in the .csv file corresponding to each 
-        sample measurement (e.g. 'sample')   
+        sample measurement (e`.g. 'sample')   
     '''
     # find all the files in the directory that are .csv
     filenames = find_filenames(directory)
@@ -179,12 +177,14 @@ def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample')
         if '%'  in df.iloc[0, df.columns.get_loc(sample_list[0])+1]:
             percent = True
         
-        # find the rows in the .csv that correspond to the data and trim the 
-        # dataframe to contain only the data
-        min_wavelength_row = np.where(df[df.columns[0]]==str(min_wavelength))[0]
-        max_wavelength_row = np.where(df[df.columns[0]]==str(max_wavelength))[0]
-        last_data_row = int(max(min_wavelength_row, max_wavelength_row))
-        df = df[1:last_data_row+1]
+        # trim the dataframe so that it only contains the data
+        df = df[df[df.columns[0]].astype(str).apply(lambda x: x.isnumeric())]
+
+        # find the closest values of wavelength between the user's input 
+        # wavelength and the data wavelengths
+        data_wavelengths = df[df.columns[0]]
+        wl_indices = np.array(find_close_indices(data_wavelengths.astype(int), wavelengths)) + 1
+        df = df.ix[wl_indices]
         
         # make new dataframes for the spectral data of the samples and the 
         # corresponding wavelengths
@@ -194,13 +194,13 @@ def convert_data_csv(directory, min_wavelength, max_wavelength, header='sample')
             # get the wavelengths and data for each sample
             sample_wavelengths[:,i] = df.iloc[:, df.columns.get_loc(sample_list[i])]
             sample_data[:,i] = df.iloc[:, df.columns.get_loc(sample_list[i])+1]
-    
+
             # if the wavelengths are in decreasing order, then revert the order 
             # of the wavelengths and the data
             if sample_wavelengths[0,i] > sample_wavelengths[-1,i]:
                 sample_wavelengths[:,i] = sample_wavelengths[:,i][::-1] 
                 sample_data[:,i] = sample_data[:,i][::-1] 
-            
+
             # if the data are in percentage (not normalized from 0 to 1), then
             # divide by 100 
             if percent == True:           
